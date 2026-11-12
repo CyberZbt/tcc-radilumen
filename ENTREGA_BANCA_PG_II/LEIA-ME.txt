@@ -1,0 +1,69 @@
+ENTREGA PARA BANCA — PG II
+Lucas Rodrigues Zabot
+Orientador: Prof. Sérgio Marques
+Universidade Tuiuti do Paraná — Ciência da Computação — 2026
+
+Prazo desta pasta: 14/11 (entrega para a banca).
+A apresentação oral é de 30/11 a 05/12 (arquivo já incluso na pasta 3_apresentacao).
+
+
+O QUE ENVIAR NO ONEDRIVE
+------------------------
+Envie esta pasta INTEIRA (ou o arquivo ZIP ao lado dela).
+
+NÃO envie a pasta original tcc__Copy: ela contém venv, dataset e archive
+(vários gigabytes) que a banca não precisa.
+
+
+CONTEÚDO
+--------
+1_monografia\
+    trabalho.pdf                  Texto completo (ABNT/UTP), 54 páginas
+
+2_programa\
+    codigo\                       Código-fonte + pesos treinados + manuais
+    web-detector\                 Página da demo (mesmo modelo, no navegador)
+    COMO_RODAR.txt                Passo a passo para abrir o software
+
+3_apresentacao\
+    Apresentacao_PG_II_Lucas_Zabot.pptx
+    Roteiro_apresentacao_PG_II.txt
+    (para a banca oral; não é obrigatório no dia 14/11)
+
+
+DEMO JÁ NO AR (sem instalar nada)
+---------------------------------
+https://viewdicom-tcc.web.app
+
+Abra no navegador, envie um PNG de punho (há um exemplo em
+2_programa\codigo\exemplos\punho_fratura.jpg) e veja a caixa da fratura.
+
+
+COMO RODAR O PROGRAMA NO PC
+---------------------------
+Instruções detalhadas: 2_programa\COMO_RODAR.txt
+(iguais aos Apêndices A e B da monografia).
+
+Resumo:
+  1. Instale Python 3.10 ou 3.13
+  2. No PowerShell, dentro de 2_programa\codigo:
+       python -m venv venv
+       .\venv\Scripts\Activate.ps1
+       pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+       pip install -r requirements.txt
+  3. streamlit run app/streamlit_app.py
+  4. Envie exemplos\punho_fratura.jpg
+
+
+O QUE NÃO ESTÁ AQUI (DE PROPÓSITO)
+----------------------------------
+- archive/          dataset GRAZPEDWRI-DX (público, ~20 GB)
+- codigo/venv       ambiente Python local
+- imagens de treino já convertidas (yolo_8bit)
+- pastas de treino (runs)
+
+O peso oficial já vai nesta pasta:
+  2_programa\codigo\weights\final_proposed.pt
+
+Para treinar de novo: use codigo\COLAB.md e o notebook
+codigo\notebooks\colab_train.ipynb (precisa do dataset público).

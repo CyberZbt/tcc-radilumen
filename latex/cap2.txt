@@ -1,0 +1,95 @@
+11
+
+dados públicas de radiografias musculoesqueléticas para o treinamento do algoritmo.
+Segundo ??), a metodologia representa a estratégia do pesquisador para alcançar
+os objetivos; portanto, o trabalho envolverá fases de pré-processamento de imagens,
+ajuste fino de redes neurais pré-treinadas e avaliação de desempenho computacional
+focada em exatidão espacial, utilizando métricas como Intersection over Union (IoU) e
+Mean Average Precision (mAP).
+Este trabalho está organizado da seguinte forma: o Capítulo 2 apresenta a
+Fundamentação Teórica, abordando os conceitos do padrão DICOM e o funcionamento
+da Visão Computacional. O Capítulo 3 descreve os Trabalhos Relacionados, situando
+esta pesquisa no estado da arte. O Capítulo 4 detalha a Metodologia de construção
+da solução e as ferramentas para implementação. Por fim, o Capítulo 5 apresenta os
+Resultados Esperados e Discussão, e o Capítulo 6 traz as Considerações Finais do
+projeto.
+
+12
+
+2 FUNDAMENTAÇÃO TEÓRICA
+Neste capítulo, apresentam-se os conceitos fundamentais que sustentam o
+desenvolvimento desta pesquisa. A fundamentação percorre desde os princípios da
+inteligência artificial aplicada à saúde até as especificidades técnicas do padrão DICOM
+e arquiteturas avançadas de detecção de anomalias.
+2.1
+
+A REVOLUÇÃO DA VISÃO COMPUTACIONAL NA SAÚDE
+
+A Inteligência Artificial (IA) tem transformado a área da saúde, com investimentos globais que ultrapassaram 11 bilhões de dólares americanos em 2022. Dentro
+deste ecossistema, a Visão Computacional destaca-se por ensinar máquinas a interpretar o mundo visual, simulando a percepção humana para reconhecer padrões em
+grandes volumes de dados ??). Conforme destacado por ??), essa tecnologia alavanca
+algoritmos de Deep Learning com sensores ópticos para ajudar médicos a identificar
+doenças rapidamente, fornecer diagnósticos precisos e até prever resultados de saúde.
+Historicamente, o diagnóstico por imagem dependia exclusivamente da experiência subjetiva do profissional. A Visão Computacional oferece uma solução para a
+variabilidade entre especialistas ao fornecer uma análise objetiva e padronizada. Além
+do diagnóstico, a tecnologia permite o monitoramento de sinais vitais e a conformidade de higiene hospitalar, reduzindo custos operacionais e elevando a segurança do
+paciente (????).
+2.2
+
+REDES NEURAIS CONVOLUCIONAIS
+
+As Redes Neurais Convolucionais (ConvNet ou CNN) representam a vanguarda
+do Aprendizado Profundo (Deep Learning) para o processamento de radiografias. Diferentemente de algoritmos de classificação tradicionais, nos quais o pré-processamento
+e a criação de filtros são realizados de forma manual e empírica, as CNNs possuem a
+capacidade intrínseca de aprender esses filtros e características por meio do treinamento exaustivo (????).
+2.2.1
+
+Fundamentos e Aprendizado Automático de Características
+
+A arquitetura das Redes Neurais Convolucionais (CNNs) é análoga ao padrão
+de conectividade dos neurônios no cérebro humano, sendo inspirada especificamente
+na organização do Córtex Visual. No modelo biológico, os neurônios individuais
+respondem a estímulos apenas em uma região restrita do campo visual, denominada
+Campo Receptivo. Transpondo esse conceito para o domínio computacional, uma
+
+13
+
+coleção desses campos se sobrepõe para cobrir toda a área da imagem médica,
+permitindo que a rede atribua importância, por meio de pesos e vieses aprendíveis, a
+diversos aspectos e objetos da imagem.
+Diferentemente do aprendizado de máquina tradicional, no qual especialistas
+humanos precisam projetar extratores de características manualmente, no Deep Learning a máquina é alimentada com dados brutos e desenvolve, de forma autônoma,
+as representações necessárias para o reconhecimento de padrões (????). Esse processo ocorre de maneira hierárquica: as camadas iniciais da rede detectam primitivas
+simples, como bordas e contrastes, enquanto as camadas mais profundas interpretam
+geometrias complexas e texturas específicas, como a estrutura trabecular óssea. Essa
+capacidade permite que o sistema diferencie com precisão uma estrutura óssea íntegra de uma descontinuidade traumática, reduzindo drasticamente a necessidade de
+pré-processamento manual e eliminando a subjetividade inerente aos filtros projetados
+por humanos (??).
+2.2.2
+
+Arquiteturas
+
+Para que o sistema seja eficaz na triagem de traumas, é imperativo localizar a
+anomalia por meio de arquiteturas especializadas:
+Faster R-CNN: Arquitetura de duplo estágio que utiliza redes de proposta de
+região (RPN) para gerar caixas delimitadoras (bounding boxes) precisas sobre a fratura.
+YOLO (You Only Look Once): trata a detecção como um problema de regressão
+único, processando a imagem inteira em uma única passagem. Isso oferece velocidades
+de inferência em tempo real, vitais para pronto-socorros (??).
+U-Net: arquitetura de referência para segmentação semântica biomédica. Sua
+estrutura em “U” permite localizar a fratura em nível de pixel, destacando a área da
+lesão para um detalhamento anatômico superior (??).
+2.2.3
+
+Transfer Learning
+
+O processo tradicional de aprendizado de máquina baseia-se na premissa de
+que os algoritmos precisam ser treinados a partir do zero (from scratch) para cada nova
+tarefa. No domínio do Deep Learning, isso exige uma quantidade massiva de dados
+médicos rotulados; recurso escasso e custoso devido às leis de privacidade, além de
+elevado poder de processamento computacional. Para transpor essas barreiras logísticas e financeiras, emprega-se o Transfer Learning (Aprendizado por Transferência).
+Conforme definido por ??), o aprendizado por transferência é uma técnica na
+qual o conhecimento adquirido por um modelo em um grande conjunto de dados
+(tarefa de origem) é preservado e reaproveitado para melhorar a generalização em
+
+

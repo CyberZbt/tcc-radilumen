@@ -1,0 +1,57 @@
+# Dataset original e versões geradas (grandes demais para GitHub)
+archive/
+*.tar
+codigo/dataset/yolo/
+codigo/dataset/yolo_8bit/
+codigo/dataset/smoke_8bit/
+fracture_only_colab/
+
+# Ambiente e artefatos Python/YOLO
+codigo/venv/
+codigo/venv_local/
+codigo/.venv/
+codigo/runs/
+codigo/weights/
+codigo/*.pt
+web-detector/.firebase/
+
+# Pacote duplicado (a pasta ENTREGA_BANCA_PG_II/ vai no GitHub)
+ENTREGA_BANCA_PG_II.zip
+
+# IDE / agente
+.cursor/
+
+# Não faz parte deste TCC
+app.py
+_correcao_angela/
+configs/
+docs/
+TODO.md
+**/__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+.env
+
+# Arquivos auxiliares do LaTeX (manter fontes e trabalho.pdf)
+latex/*.aux
+latex/*.bbl
+latex/*.blg
+latex/*.fdb_latexmk
+latex/*.fls
+latex/*.lof
+latex/*.log
+latex/*.lot
+latex/*.out
+latex/*.synctex.gz
+latex/*.toc
+latex/*.tmp
+latex/compile*.txt
+latex/texput.log
+latex/test_cite.*
+latex/test_macro.*
+
+# Rascunhos gerados
+latex/cap2.txt
+latex/trabalho.txt
+latex/trabalho.locod
+latex/Figuras/*.bak

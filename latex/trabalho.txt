@@ -1,0 +1,1396 @@
+UNIVERSIDADE TUIUTI DO PARANÁ
+LUCAS RODRIGUES ZABOT
+
+APLICAÇÃO DE REDES NEURAIS CONVOLUCIONAIS PARA
+AUXÍLIO AO DIAGNÓSTICO E LOCALIZAÇÃO DE FRATURAS
+ÓSSEAS EM IMAGENS MÉDICAS DICOM
+
+CURITIBA
+2026
+
+LUCAS RODRIGUES ZABOT
+
+APLICAÇÃO DE REDES NEURAIS CONVOLUCIONAIS PARA
+AUXÍLIO AO DIAGNÓSTICO E LOCALIZAÇÃO DE FRATURAS
+ÓSSEAS EM IMAGENS MÉDICAS DICOM
+
+Trabalho de Conclusão de Curso apresentado ao curso de Bacharelado em Ciência
+da Computação da Faculdade de Ciências
+Exatas e de Tecnologia da Universidade
+Tuiuti do Paraná, como requisito à obtenção
+do grau de Bacharel.
+Orientador: Prof. Sérgio Marques
+
+CURITIBA
+2026
+
+RESUMO
+O presente trabalho apresenta o desenvolvimento de um sistema de suporte à decisão
+clínica focado na detecção e localização automatizada de fraturas ósseas em imagens
+médicas no padrão DICOM (Digital Imaging and Communications in Medicine). O
+objetivo geral consiste em utilizar algoritmos de Redes Neurais Convolucionais (CNN)
+para auxiliar profissionais de saúde na triagem de exames de Raio-X, visando a
+redução de erros diagnósticos causados pela alta demanda e fadiga em ambientes de
+urgência. A metodologia fundamenta-se na aplicação de técnicas de Deep Learning e
+Transfer Learning, utilizando bases de dados públicas para o treinamento e validação
+do modelo computacional. O sistema proposto divide-se em um módulo de extração de
+metadados técnicos e uma interface visual que utiliza bounding boxes para destacar
+descontinuidades ósseas. Espera-se, como resultado, a obtenção de uma ferramenta
+com altos índices de sensibilidade e acurácia, capaz de otimizar o fluxo de atendimento
+hospitalar e aumentar a segurança do paciente. A hipótese é que a integração de
+inteligência artificial no fluxo de diagnóstico atue como uma camada de segurança
+robusta, mitigando a incidência de falsos negativos na detecção de fraturas ósseas e
+otimizando o tempo de resposta em ambientes de urgência médica.
+Palavras-chave: Inteligência Artificial; Transfer Learning; Fraturas Ósseas; Deep
+Learning; Redes Neurais Convolucionais.
+
+LISTA DE ILUSTRAÇÕES
+1
+2
+3
+4
+
+5
+6
+7
+8
+9
+10
+
+MAPEAMENTO DE ATIVAÇÃO DE CLASSE DEMONSTRANDO A
+ÁREA AFETADA . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ARQUITETURA DA REDE NEURAL U-NET DEMONSTRANDO
+OS CAMINHOS DE CONTRAÇÃO E EXPANSÃO . . . . . . . . .
+REPRESENTAÇÃO DA ESTRUTURA DE METADADOS E CABEÇALHO DE UM ARQUIVO DICOM . . . . . . . . . . . . . . . . . .
+FLUXOGRAMA DO PROCESSO DE DETECÇÃO DE FRATURAS
+ASSISTIDA POR INTELIGÊNCIA ARTIFICIAL EM AMBIENTES
+DE URGÊNCIA . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+FLUXO DE PROCESSAMENTO E ANÁLISE DE IMAGENS MÉDICAS UTILIZANDO DEEP LEARNING . . . . . . . . . . . . . . . .
+FLUXOGRAMA GERAL DO PIPELINE DE DETECÇÃO DE FRATURAS ÓSSEAS . . . . . . . . . . . . . . . . . . . . . . . . . . .
+FLUXO DE CONSTRUÇÃO E ANOTAÇÃO DO DATASET
+GRAZPEDWRI-DX . . . . . . . . . . . . . . . . . . . . . . . . . . .
+REPRESENTAÇÃO ESQUEMÁTICA DA DETECÇÃO YOLO EM
+GRADE COM BOUNDING BOX . . . . . . . . . . . . . . . . . . .
+EXEMPLOS DE TÉCNICAS DE DATA AUGMENTATION PREVISTAS NO TREINAMENTO . . . . . . . . . . . . . . . . . . . . . . .
+REPRESENTAÇÃO ESQUEMÁTICA DAS COORDENADAS DA
+CAIXA DELIMITADORA . . . . . . . . . . . . . . . . . . . . . . . .
+
+19
+20
+21
+
+22
+23
+24
+26
+27
+29
+32
+
+LISTA DE TABELAS
+TABELA 1 – COMPARAÇÃO DE TRABALHOS RELACIONADOS COM FOCO
+EM FRATURAS E DADOS DICOM . . . . . . . . . . . . . . . . . .
+
+23
+
+LISTA DE CÓDIGOS
+
+LISTA DE SIGLAS E ACRÔNIMOS
+IA
+
+Inteligência Artificial
+
+ABNT
+
+Associação Brasileira de Normas Técnicas
+
+AP
+
+Precisão Média (Average Precision)
+
+CNN
+
+Rede Neural Convolucional (Convolutional Neural Network)
+
+CUDA
+
+Arquitetura Unificada de Dispositivos de Computação (Compute Unified Device Architecture)
+
+DICOM
+
+Comunicação de Imagens Digitais em Medicina (Digital Imaging and
+Communications in Medicine)
+
+GPU
+
+Unidade de Processamento Gráfico (Graphics Processing Unit)
+
+IoU
+
+Interseção sobre União (Intersection over Union)
+
+mAP
+
+Precisão Média Média (Mean Average Precision)
+
+PDI
+
+Processamento Digital de Imagens
+
+RPN
+
+Rede de Proposta de Regiões (Region Proposal Network)
+
+XAI
+
+Inteligência Artificial Explicável (Explainable Artificial Intelligence)
+
+YOLO
+
+Você Olha Apenas Uma Vez (You Only Look Once)
+
+LISTA DE SÍMBOLOS
+x
+
+Tensor de entrada que representa a imagem radiográfica.
+
+ŷ
+
+Vetor de saída previsto pelo modelo.
+
+pc
+
+Probabilidade de confiança da detecção.
+
+bx , by
+
+Coordenadas do centro da caixa delimitadora.
+
+bw , bh
+
+Largura e altura da caixa delimitadora.
+
+TP
+
+Verdadeiros positivos.
+
+FP
+
+Falsos positivos.
+
+FN
+
+Falsos negativos.
+
+P
+
+Precisão.
+
+R
+
+Sensibilidade ou revocação.
+
+SUMÁRIO
+1
+2
+2.1
+2.2
+2.2.1
+2.2.2
+2.2.3
+2.2.4
+2.3
+2.4
+2.4.1
+2.4.2
+2.5
+2.5.1
+2.5.2
+3
+3.1
+3.2
+3.3
+3.4
+3.5
+3.6
+4
+4.1
+4.2
+4.3
+4.4
+4.5
+4.5.1
+4.5.2
+4.5.3
+4.5.4
+4.5.5
+4.6
+4.7
+4.8
+5
+
+INTRODUÇÃO . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+FUNDAMENTAÇÃO TEÓRICA . . . . . . . . . . . . . . . . . . . . . . .
+A REVOLUÇÃO DA VISÃO COMPUTACIONAL NA SAÚDE . . . . . . .
+REDES NEURAIS CONVOLUCIONAIS . . . . . . . . . . . . . . . . . .
+Fundamentos e Aprendizado Automático de Características . . . . . . .
+Arquiteturas . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Transfer Learning . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Processo de Treinamento . . . . . . . . . . . . . . . . . . . . . . . . . .
+O PADRÃO DICOM E IMAGENS MÉDICAS . . . . . . . . . . . . . . . .
+PROCESSAMENTO DIGITAL DE IMAGEM (PDI) . . . . . . . . . . . . .
+Filtros e Normalização . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Inteligência Artificial Explicável (XAI) . . . . . . . . . . . . . . . . . . . .
+MÉTRICAS DE AVALIAÇÃO DE DESEMPENHO . . . . . . . . . . . . .
+Intersection over Union (IoU) . . . . . . . . . . . . . . . . . . . . . . . .
+Mean Average Precision (mAP) . . . . . . . . . . . . . . . . . . . . . . .
+TRABALHOS RELACIONADOS . . . . . . . . . . . . . . . . . . . . . .
+CHEXNET : DETECÇÃO DE PNEUMONIA EM RADIOGRAFIAS . . . .
+U-NET : SEGMENTAÇÃO DE IMAGENS BIOMÉDICAS . . . . . . . . .
+EXTRAÇÃO AUTOMATIZADA DE METADADOS DICOM . . . . . . . .
+INTELIGÊNCIA ARTIFICIAL NA DETECÇÃO DE FRATURAS . . . . .
+DEEP LEARNING PARA ANÁLISE DE IMAGENS MÉDICAS . . . . . .
+ANÁLISE COMPARATIVA . . . . . . . . . . . . . . . . . . . . . . . . . .
+METODOLOGIA . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+VISÃO GERAL . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+MONTAGEM DO DATASET . . . . . . . . . . . . . . . . . . . . . . . . .
+MODELO CNN . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+PERTURBAÇÕES . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+ESTRATÉGIA PROPOSTA . . . . . . . . . . . . . . . . . . . . . . . . .
+Motivação . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Ideia Central . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Funcionamento . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+Diferença para Abordagens Existentes . . . . . . . . . . . . . . . . . . .
+Hipótese . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+CONFIGURAÇÃO EXPERIMENTAL . . . . . . . . . . . . . . . . . . . .
+DEFINIÇÃO DA TAREFA . . . . . . . . . . . . . . . . . . . . . . . . . .
+MÉTRICAS . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+RESULTADOS ESPERADOS E DISCUSSÃO . . . . . . . . . . . . . .
+
+10
+12
+12
+12
+13
+13
+14
+14
+15
+15
+15
+16
+16
+16
+17
+18
+18
+18
+19
+20
+21
+23
+24
+24
+25
+26
+28
+28
+29
+29
+29
+30
+30
+30
+31
+32
+34
+
+5.1
+RESULTADOS BASELINE . . . . . . . . . . . . . . . . . . . . . . . . .
+5.2
+RESULTADOS DA NOVA TÉCNICA . . . . . . . . . . . . . . . . . . . .
+5.3
+COMPARAÇÃO . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.4
+ROBUSTEZ . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+5.5
+DISCUSSÃO . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+6
+CONSIDERAÇÕES FINAIS . . . . . . . . . . . . . . . . . . . . . . . . .
+Referências . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . . .
+
+34
+34
+35
+35
+35
+37
+38
+
+10
+
+1 INTRODUÇÃO
+A radiologia digital revolucionou o diagnóstico médico ao permitir que exames
+de imagem fossem armazenados e compartilhados de forma instantânea por meio
+do padrão DICOM (Digital Imaging and Communications in Medicine). No entanto, o
+aumento exponencial na demanda por exames em unidades de pronto-atendimento
+gerou um novo desafio: a sobrecarga dos profissionais de saúde. Em cenários de
+urgência, a fadiga e o alto volume de pacientes podem induzir a erros na detecção
+de fraturas ósseas sutis, comprometendo a segurança do paciente e a eficácia do
+tratamento. Conforme destacado por
+(2016), a introdução deve fornecer uma visão geral clara das motivações do
+estudo, sendo essencial, segundo
+(2021), contextualizar o cenário para evidenciar as lacunas que a pesquisa
+busca preencher. Neste trabalho, essa lacuna corresponde à ausência de ferramentas
+automatizadas de triagem em tempo real nos hospitais, apesar do avanço da inteligência
+artificial na medicina (
+, 2019;
+, 2020).
+A interpretação dessas radiografias é uma tarefa de alta responsabilidade que,
+frequentemente, ocorre sob condições de pressão temporal. Estudos indicam que a
+fadiga cognitiva em turnos extensos e a alta rotatividade são fatores determinantes
+para a ocorrência de erros de percepção, nos quais fraturas sutis ou microfissuras não
+são identificadas inicialmente. Essa lacuna diagnóstica gera um ciclo de ineficiência,
+resultando em altas indevidas, complicações clínicas posteriores e aumento dos custos
+operacionais para as instituições de saúde. Diante deste cenário de alta complexidade,
+formula-se o seguinte problema de pesquisa: de que maneira a implementação de
+Redes Neurais Convolucionais (CNN) pode atuar como uma camada de segurança
+adicional na detecção e localização automática de fraturas ósseas, minimizando a
+incidência de falsos negativos em ambientes de urgência médica? Como mencionado
+por
+(2014), a formulação explícita desta pergunta norteadora é fundamental para
+estabelecer os limites da investigação tecnológica em busca de uma segunda opinião
+automatizada.
+Para responder a este problema, o objetivo geral deste trabalho consiste em
+desenvolver e validar um sistema computacional de suporte à decisão que utilize
+Redes Neurais Convolucionais para a detecção e localização automática de fraturas
+em exames de imagem no padrão DICOM, visando otimizar a triagem radiológica em
+tempo real. Para alcançar esse propósito maior, definiram-se objetivos específicos que
+incluem a implementação de um leitor de metadados, o treinamento do modelo de
+
+11
+
+Inteligência Artificial para reconhecimento de descontinuidades ósseas e a criação de
+uma interface com alertas visuais por meio de caixas delimitadoras (bounding boxes).
+Essa estrutura de metas, conforme orienta
+(2022), guiará o desenvolvimento prático das etapas de validação do sistema.
+A fim de viabilizar a construção desta solução, a metodologia adotada baseia-se
+na aplicação de técnicas de Deep Learning e Transfer Learning, utilizando bases de
+dados públicas de radiografias musculoesqueléticas para o treinamento do algoritmo.
+Segundo
+(2011), a metodologia representa a estratégia do pesquisador para alcançar
+os objetivos; portanto, o trabalho envolverá fases de pré-processamento de imagens,
+ajuste fino de redes neurais pré-treinadas e avaliação de desempenho computacional
+focada em exatidão espacial, utilizando métricas como Intersection over Union (IoU) e
+Mean Average Precision (mAP).
+Este trabalho está organizado da seguinte forma: o Capítulo 2 apresenta a
+Fundamentação Teórica, abordando os conceitos do padrão DICOM e o funcionamento
+da Visão Computacional. O Capítulo 3 descreve os Trabalhos Relacionados, situando
+esta pesquisa no estado da arte. O Capítulo 4 detalha a Metodologia de construção
+da solução e as ferramentas para implementação. Por fim, o Capítulo 5 apresenta os
+Resultados e Discussão, e o Capítulo 6 traz as Considerações Finais do projeto.
+
+12
+
+2 FUNDAMENTAÇÃO TEÓRICA
+Neste capítulo, apresentam-se os conceitos fundamentais que sustentam o
+desenvolvimento desta pesquisa. A fundamentação percorre desde os princípios da
+inteligência artificial aplicada à saúde até as especificidades técnicas do padrão DICOM
+e arquiteturas avançadas de detecção de anomalias.
+2.1
+
+A REVOLUÇÃO DA VISÃO COMPUTACIONAL NA SAÚDE
+
+A Inteligência Artificial (IA) tem transformado o setor de saúde, com investimentos globais que ultrapassaram 11 bilhões de dólares em 2022. Dentro deste
+ecossistema, a Visão Computacional destaca-se por ensinar máquinas a interpretar o
+mundo visual, simulando a percepção humana para reconhecer padrões em grandes
+volumes de dados (
+, 2024). Conforme destacado por
+(2024), essa tecnologia alavanca algoritmos de Deep Learning com sensores
+ópticos para ajudar médicos a identificar doenças rapidamente, fornecer diagnósticos
+precisos e até prever resultados de saúde.
+Historicamente, o diagnóstico por imagem dependia exclusivamente da experiência subjetiva do profissional. A Visão Computacional oferece uma solução para a
+variabilidade entre especialistas ao fornecer uma análise objetiva e padronizada. Além
+do diagnóstico, a tecnologia permite o monitoramento de sinais vitais e a conformidade de higiene hospitalar, reduzindo custos operacionais e elevando a segurança do
+paciente (
+, 2024;
+, 2024).
+2.2
+
+REDES NEURAIS CONVOLUCIONAIS
+
+As Redes Neurais Convolucionais (ConvNet ou CNN) representam a vanguarda
+do Aprendizado Profundo (Deep Learning) para o processamento de radiografias. Diferentemente de algoritmos de classificação tradicionais, nos quais o pré-processamento
+e a criação de filtros são realizados de forma manual e empírica, as CNNs possuem a
+capacidade intrínseca de aprender esses filtros e características por meio do treinamento exaustivo (
+, 2024;
+, 2024).
+
+13
+
+2.2.1
+
+Fundamentos e Aprendizado Automático de Características
+
+A arquitetura das Redes Neurais Convolucionais (CNNs) é análoga ao padrão
+de conectividade dos neurônios no cérebro humano, sendo inspirada especificamente
+na organização do Córtex Visual. No modelo biológico, os neurônios individuais
+respondem a estímulos apenas em uma região restrita do campo visual, denominada
+Campo Receptivo. Transpondo esse conceito para o domínio computacional, uma
+coleção desses campos se sobrepõe para cobrir toda a área da imagem médica,
+permitindo que a rede atribua importância, por meio de pesos e vieses aprendíveis, a
+diversos aspectos e objetos da imagem.
+Diferentemente do aprendizado de máquina tradicional, no qual especialistas
+humanos precisam projetar extratores de características manualmente, no Deep Learning a máquina é alimentada com dados brutos e desenvolve, de forma autônoma, as
+representações necessárias para o reconhecimento de padrões (
+, 2024;
+, 2024). Esse processo ocorre de maneira hierárquica: as camadas iniciais da
+rede detectam primitivas simples, como bordas e contrastes, enquanto as camadas mais
+profundas interpretam geometrias complexas e texturas específicas, como a estrutura
+trabecular óssea. Essa capacidade permite que o sistema diferencie com precisão uma
+estrutura óssea íntegra de uma descontinuidade traumática, reduzindo drasticamente a
+necessidade de pré-processamento manual e eliminando a subjetividade inerente aos
+filtros projetados por humanos (
+, 2024).
+2.2.2
+
+Arquiteturas
+
+Para que o sistema seja eficaz na triagem de traumas, é imperativo localizar a
+anomalia por meio de arquiteturas especializadas:
+Faster R-CNN: Arquitetura de duplo estágio que utiliza redes de proposta de
+região (RPN) para gerar caixas delimitadoras (bounding boxes) precisas sobre a fratura.
+YOLO (You Only Look Once): trata a detecção como um problema de regressão
+único, processando a imagem inteira em uma única passagem. Isso oferece velocidades
+de inferência em tempo real, vitais para pronto-socorros (
+, 2024).
+U-Net: arquitetura de referência para segmentação semântica biomédica. Sua
+estrutura em “U” permite localizar a fratura em nível de pixel, destacando a área da
+lesão para um detalhamento anatômico superior (
+, 2015).
+
+14
+
+2.2.3
+
+Transfer Learning
+
+O processo tradicional de aprendizado de máquina baseia-se na premissa de
+que os algoritmos precisam ser treinados a partir do zero (from scratch) para cada nova
+tarefa. No domínio do Deep Learning, isso exige uma quantidade massiva de dados
+médicos rotulados; recurso escasso e custoso devido às leis de privacidade, além de
+elevado poder de processamento computacional. Para transpor essas barreiras logísticas e financeiras, emprega-se o Transfer Learning (Aprendizado por Transferência).
+Conforme definido por
+(2024), o aprendizado por transferência é uma técnica na qual o conhecimento
+adquirido por um modelo em um grande conjunto de dados (tarefa de origem) é
+preservado e reaproveitado para melhorar a generalização em um conjunto de dados
+diferente, mas relacionado à tarefa de destino. No contexto da radiologia, isso ocorre
+da seguinte forma:
+Reaproveitamento de Pesos: Utiliza-se uma rede previamente treinada em
+bases de dados genéricas de escala global como o ImageNet, que contém milhões
+de imagens. O algoritmo já "aprendeu"a identificar formas primitivas universais, como
+linhas, curvas e contrastes.
+Congelamento e Ajuste Fino (Fine-Tuning): As camadas iniciais da arquitetura,
+responsáveis por essa extração básica de características, são "congeladas"para preservar o aprendizado. Em seguida, as camadas finais da rede são liberadas e treinadas
+especificamente com radiografias no padrão DICOM.
+Vantagem Computacional: segundo a
+(2024), essa estratégia reduz drasticamente os custos computacionais, tanto
+em tempo quanto em uso de GPUs e processadores, necessários para criar o modelo,
+pois um número menor de iterações (epochs) é exigido para atingir a convergência.
+Além disso, a rede adquire uma capacidade de generalização maior, evitando falhas ao
+analisar exames de pacientes reais no pronto-socorro.
+Essa técnica torna o desenvolvimento da solução proposta viável, permitindo
+atingir alta precisão diagnóstica em traumas musculoesqueléticos mesmo operando
+com conjuntos de dados locais menores (
+, 2020;
+, 2024).
+2.2.4
+
+Processo de Treinamento
+
+O treinamento ocorre de forma hierárquica: as camadas iniciais da rede detectam primitivas simples, como bordas e contrastes básicos, enquanto as camadas
+
+15
+
+profundas interpretam geometrias complexas e texturas específicas da estrutura trabecular óssea (
+, 2024).
+2.3
+
+O PADRÃO DICOM E IMAGENS MÉDICAS
+
+O padrão DICOM constitui elemento central neste trabalho, pois define o formato
+de entrada do sistema proposto e assegura a interoperabilidade entre equipamentos
+radiológicos e sistemas hospitalares. A seguir, destacam-se os aspectos estruturais
+e de representação visual mais relevantes para o processamento automatizado de
+radiografias musculoesqueléticas (
+, 2024;
+, 2020).
+a) Estrutura de Metadados e Interoperabilidade. O padrão DICOM (Digital
+Imaging and Communications in Medicine) é o protocolo global para transmissão e
+armazenamento de imagens médicas. Ele encapsula a imagem e metadados técnicos
+críticos, como voltagem do tubo de raios-X, modalidade do exame e lateralidade do
+membro, permitindo que a inteligência artificial valide a qualidade e o contexto clínico
+do exame antes do processamento (
+, 2024;
+, 2021).
+b) Matriz de Pixels e Escala de Cinza. Diferente de formatos comuns como
+JPEG (8 bits), o DICOM opera com profundidades de 12 a 16 bits, resultando em até
+65.536 tons de cinza (
+, 2024). Esta alta fidelidade permite manipular as janelas de contraste (Windowing) para destacar microfissuras que seriam invisíveis em formatos comprimidos,
+preservando informações essenciais para a detecção de descontinuidades ósseas sutis
+(
+, 2017).
+2.4
+2.4.1
+
+PROCESSAMENTO DIGITAL DE IMAGEM (PDI)
+Filtros e Normalização
+
+Para preparar a imagem para a rede neural, o algoritmo CLAHE (ContrastLimited Adaptive Histogram Equalization) é frequentemente aplicado para realçar o
+contraste local das bordas ósseas sem amplificar o ruído de fundo (
+, 1994;
+
+16
+
+, 2017). Em seguida, aplica-se a normalização dos dados escalonando os
+valores dos pixels, otimizando a convergência computacional e reduzindo a variabilidade
+entre exames de diferentes equipamentos (
+, 2017).
+2.4.2
+
+Inteligência Artificial Explicável (XAI)
+
+Para que o médico confie na análise da máquina, utilizam-se técnicas de IA
+Explicável, como o Grad-CAM. Este método gera mapas de calor indicando matematicamente quais pixels tiveram maior peso na decisão da IA, fornecendo uma justificativa
+visual crucial (
+, 2024).
+2.5
+
+MÉTRICAS DE AVALIAÇÃO DE DESEMPENHO
+
+Como este trabalho tem como objetivo não apenas classificar, mas localizar
+as fraturas por meio do uso de bounding boxes (caixas delimitadoras), as métricas
+de avaliação tradicionais de classificação precisam ser substituídas para mensurar a
+exatidão espacial da detecção. Para este fim, destacam-se duas métricas fundamentais:
+2.5.1
+
+Intersection over Union (IoU)
+
+O Intersection over Union (IoU) é a métrica padrão para avaliar a precisão da
+localização espacial do algoritmo (
+, 2014;
+, 2017). Ele calcula a razão entre a área de sobreposição (interseção) da
+bounding box predita pela inteligência artificial e a bounding box real anotada por
+um médico especialista (ground truth), dividida pela área total de união entre ambas,
+conforme expresso na Equação (2.1):
+Área de Interseção
+(2.1)
+Área de União
+Um IoU de 1.0 representa uma sobreposição perfeita. Na literatura de visão
+computacional médica, detecções que atingem um limiar de IoU ≥ 0.5 (50%) já são
+frequentemente consideradas clinicamente válidas para alertar o profissional de saúde
+(
+, 2014;
+, 2020).
+IoU =
+
+17
+
+2.5.2
+
+Mean Average Precision (mAP)
+
+A Mean Average Precision (mAP) é a métrica mais robusta para avaliar a
+qualidade global de modelos de detecção de objetos (
+, 2014). Ela calcula a média da Precisão Média (AP) avaliada em diferentes
+limiares de IoU, fornecendo um único valor que resume a eficiência do modelo, como
+apresentado na Equação (2.2):
+mAP =
+
+N
+1 X
+APi
+N i=1
+
+(2.2)
+
+Sendo N o número de classes no contexto deste trabalho, focando apenas na
+classe de fraturas, N = 1 e APi a área sob a curva de Precisão-Recall calculada para a
+detecção. No ambiente de trauma, o mAP é crucial porque penaliza rigorosamente tanto
+a criação de caixas falsas (falsos positivos) quanto a falha em localizar descontinuidades
+ósseas reais (falsos negativos) (
+, 2014;
+, 2020).
+
+18
+
+3 TRABALHOS RELACIONADOS
+Neste capítulo, são apresentados trabalhos relacionados à temática desta pesquisa, com foco em aplicações de inteligência artificial, visão computacional e processamento de imagens médicas. O objetivo é situar o projeto no estado da arte,
+evidenciando contribuições acadêmicas semelhantes, diferentes perspectivas metodológicas e lacunas que justificam o desenvolvimento da solução proposta.
+3.1
+
+CHEXNET : DETECÇÃO DE PNEUMONIA EM RADIOGRAFIAS
+
+Autores: Rajpurkar et al.
+Tipo: Artigo Científico (Universidade de Stanford)
+Este artigo tem o objetivo de demonstrar a eficácia das Redes Neurais Convolucionais na radiologia. Para isso, foi desenvolvido pelos autores um algoritmo treinado
+com mais de 100 mil imagens frontais de raio-X de tórax, focado primariamente na
+detecção de pneumonia. Com a aplicação deste modelo, foi possível provar estatisticamente que uma inteligência artificial pode atingir um desempenho diagnóstico superior
+ao de radiologistas humanos operando sob condições normais. O trabalho também
+introduziu o uso massivo de Class Activation Maps (Mapas de Ativação de Classe) para
+gerar marcações visuais explicáveis sobre as áreas afetadas.
+Embora o CheXNet trate de pneumonia em radiografias de tórax — e não de
+fraturas ósseas —, trata-se de um estudo correlato indireto que demonstra a viabilidade
+das CNNs na radiologia digital. A metodologia de Class Activation Maps adotada
+pelos autores serve como referência metodológica para este trabalho, pois permite
+gerar explicações visuais sobre as regiões que mais influenciaram a predição da rede,
+reduzindo o caráter de “caixa preta” da inteligência artificial sem sugerir validação direta
+para detecção de fraturas.
+Em relação aos resultados quantitativos, o modelo CheXNet foi avaliado por
+meio da métrica AUROC (Area Under the ROC Curve). O trabalho obteve um AUROC
+de 0,768 na detecção de pneumonia, superando estatisticamente o desempenho médio
+de uma equipe de radiologistas especialistas e indicando a eficácia da inteligência
+artificial em superar a linha de base humana em tarefas visuais complexas (
+, 2017).
+3.2
+
+U-NET : SEGMENTAÇÃO DE IMAGENS BIOMÉDICAS
+Autores: Ronneberger, Fischer e Brox
+Tipo: Artigo Científico (Conferência MICCAI)
+
+19
+
+FIGURA 1– MAPEAMENTO DE ATIVAÇÃO DE CLASSE DEMONSTRANDO A ÁREA
+AFETADA
+
+Fonte: Rajpurkar et al., 2017, disponível em: https://arxiv.org/abs/1711.05225 (adaptado).
+
+Este trabalho apresenta uma arquitetura de rede neural convolucional desenvolvida especificamente para a segmentação de imagens biomédicas. O desafio central
+superado pelos autores foi a necessidade de treinar um modelo preciso utilizando um
+conjunto muito pequeno de imagens anotadas, um cenário comum no meio médico. A
+rede possui uma estrutura simétrica em formato de "U", consistindo em um caminho de
+contração para capturar o contexto da imagem e um caminho de expansão simétrico
+para permitir a localização precisa em nível de pixel.
+Após as análises e resultados, o modelo U-Net demonstrou que a inteligência
+artificial pode ir além da classificação binária, informando se há ou não doença e
+realizando a segmentação semântica. A adoção destes conceitos embasa a viabilidade
+técnica do presente projeto em localizar microfissuras ósseas e pintar a área da lesão
+na tela do computador.
+Para validar a capacidade de segmentação, os autores utilizaram a métrica de
+Intersection over Union (IoU). A arquitetura U-Net venceu o desafio internacional ISBI
+de rastreamento celular alcançando um IoU de 0,92 (92% de precisão de sobreposição),
+demonstrando uma capacidade ímpar de delinear bordas irregulares em ambientes
+biomédicos, característica essencial para a futura marcação de fraturas (
+, 2015;
+, 2014).
+3.3
+
+EXTRAÇÃO AUTOMATIZADA DE METADADOS DICOM
+
+Autores: Smith et al.
+Tipo: Artigo Científico Journal of Digital Imaging
+Este artigo tem como foco a engenharia de dados dentro de ambientes hospitalares, propondo um framework para a extração automatizada de metadados do
+padrão DICOM. O estudo demonstrou detalhadamente como a leitura prévia de tags
+
+20
+
+FIGURA 2– ARQUITETURA DA REDE NEURAL U-NET DEMONSTRANDO OS
+CAMINHOS DE CONTRAÇÃO E EXPANSÃO
+
+Fonte: Ronneberger et al., 2015, disponível em: https://arxiv.org/abs/1505.04597.
+
+estruturadas, como a lateralidade do membro, a modalidade do exame e o equipamento
+utilizado, pode otimizar o fluxo de trabalho clínico.
+A aplicação desta pesquisa evidencia que a visão computacional falha quando
+alimentada com dados ruidosos ou fora de contexto. Desta forma, o estudo fornece o
+embasamento teórico para o Módulo de Leitura e Tratamento que será desenvolvido
+neste trabalho, garantindo que a rede neural processe apenas radiografias válidas.
+O desempenho do sistema proposto pelos autores foi avaliado por meio de
+métricas de acurácia na extração de dados. A solução atingiu 99,4% de precisão
+na triagem e classificação automatizada de metadados DICOM, comprovando que a
+normalização prévia dos dados otimiza drasticamente o tempo de processamento das
+imagens sem perdas significativas de informações clínicas (
+, 2021;
+, 2024).
+3.4
+
+INTELIGÊNCIA ARTIFICIAL NA DETECÇÃO DE FRATURAS
+
+Autores: Kim e MacKinnon
+Tipo: Artigo Científico de Revisão Sistemática Journal of Medical Imaging
+Esta pesquisa avalia exclusivamente o uso de inteligência artificial na detecção
+de fraturas. Os autores compilaram dados de dezenas de implementações em prontossocorros, focando nas taxas de sensibilidade e especificidade de algoritmos frente à
+
+21
+
+FIGURA 3– REPRESENTAÇÃO DA ESTRUTURA DE METADADOS E CABEÇALHO
+DE UM ARQUIVO DICOM
+
+Fonte: Smith et al., 2021, disponível em: https://doi.org/10.1007/s10278-020-00412-3.
+
+exaustão de radiologistas e médicos emergencialistas. Os resultados apontam que a
+fadiga cognitiva é um fator determinante para o erro médico.
+Este é o trabalho correlato mais direto com o escopo desta pesquisa, pois
+conclui que a IA atua como uma barreira de segurança vital contra falsos negativos em
+ambientes de alta pressão, justificando clinicamente a relevância da solução técnica
+proposta neste trabalho no fluxo hospitalar.
+Na análise quantitativa desta revisão sistemática, os autores consolidaram as
+métricas de diversos algoritmos de IA aplicados a imagens radiográficas. Os resultados
+demonstraram que as redes neurais alcançaram uma Sensibilidade agrupada entre
+90% e 95%, e uma Especificidade média de 90%. Esses altos índices estatísticos
+validam a viabilidade de aplicar Redes Neurais Convolucionais no cenário de trauma
+ortopédico de urgência (
+, 2020).
+3.5
+
+DEEP LEARNING PARA ANÁLISE DE IMAGENS MÉDICAS
+
+Autores: Zhou et al.
+Tipo: Livro Acadêmico Academic Press
+Esta obra atua como uma referência fundamental nos métodos modernos de
+Deep Learning aplicados à medicina. O estudo detalha as barreiras matemáticas e
+computacionais de se treinar redes neurais do zero para contextos de saúde. Os
+autores demonstram extensivamente como a técnica de Transfer Learning, baseada no
+
+22
+
+FIGURA 4– FLUXOGRAMA DO PROCESSO DE DETECÇÃO DE FRATURAS
+ASSISTIDA POR INTELIGÊNCIA ARTIFICIAL EM AMBIENTES DE URGÊNCIA
+
+Fonte: Kim e MacKinnon, 2020, disponível em: https://doi.org/10.1117/1.JMI.7.1.010901.
+
+reaproveitamento de pesos de redes pré-treinadas, supera a limitação da escassez de
+datasets médicos.
+A estratégia de desenvolvimento deste trabalho baseia-se integralmente na
+arquitetura proposta por
+(2020), garantindo a viabilidade do projeto ao permitir que o modelo seja treinado
+com menor custo computacional, atingindo acurácia acadêmica sem a necessidade de
+processamento exorbitante.
+Ao analisar o estado da arte das redes neurais, a pesquisa evidenciou que algoritmos baseados em Deep Learning e Transfer Learning apresentaram um ganho médio
+de 10% a 20% na métrica Mean Average Precision (mAP) na detecção de anomalias
+em relação aos sistemas computacionais tradicionais. Esse salto de desempenho
+reforça a escolha dessas arquiteturas modernas para a localização exata de lesões por
+meio de caixas delimitadoras (bounding boxes) (
+, 2020;
+, 2014).
+
+23
+
+FIGURA 5– FLUXO DE PROCESSAMENTO E ANÁLISE DE IMAGENS MÉDICAS
+UTILIZANDO DEEP LEARNING
+
+Fonte: Adaptado de Zhou et al., 2020, disponível em:
+https://www.researchgate.net/publication/319249582_Deep_Learning_for_Medical_Image_Analysis.
+
+3.6
+
+ANÁLISE COMPARATIVA
+
+Após a apresentação individual das obras, faz-se necessária uma síntese cruzada dos dados. A Tabela 1 apresenta uma comparação de funcionalidades e focos
+entre os trabalhos relacionados, evidenciando as metodologias de detecção adotadas,
+a aderência ao foco em fraturas, as métricas avaliativas utilizadas e os respectivos
+valores obtidos pelos autores.
+COMPARAÇÃO DE TRABALHOS RELACIONADOS COM FOCO EM FRATURAS E
+DADOS DICOM
+Trabalho (Autor/Ano)
+
+Foco em Fraturas Dados DICOM Localização Visual
+
+Métrica Principal
+
+Rajpurkar et al. (2017)
+
+NÃO
+
+SIM
+
+SIM
+
+AUROC
+
+76,8%
+
+Ronneberger et al. (2015) NÃO
+
+SIM
+
+SIM
+
+Intersection over Union (IoU)
+
+92,0%
+
+Smith et al. (2021)
+
+NÃO
+
+SIM
+
+NÃO
+
+Acurácia
+
+99,4%
+
+Kim e MacKinnon (2020)
+
+SIM
+
+SIM
+
+SIM
+
+Sensibilidade
+
+90% a 95%
+
+Zhou et al. (2020)
+
+SIM
+
+SIM
+
+SIM
+
+Ganho absoluto em mAP
+
++10% a 20%
+
+Fonte: Próprio autor, 2026.
+
+Valor Obtido
+
+24
+
+4 METODOLOGIA
+Este capítulo descreve a estratégia metodológica adotada para o desenvolvimento do sistema de detecção de fraturas ósseas, detalhando o pipeline de processamento, a seleção do dataset, a arquitetura neural, as técnicas de aumento de dados e
+os critérios de avaliação previstos para a validação experimental.
+4.1
+
+VISÃO GERAL
+
+O desenvolvimento do sistema de suporte à decisão clínica proposto neste
+trabalho estrutura-se em um pipeline sequencial de engenharia de dados e aprendizado
+de máquina. O objetivo central desta arquitetura é viabilizar o processamento ágil e
+matematicamente padronizado de exames de Raio-X, mitigando a variabilidade técnica
+inerente aos equipamentos hospitalares de diferentes fabricantes e, consequentemente,
+reduzindo a sobrecarga cognitiva do especialista plantonista.
+A solução foi projetada como um sistema unificado que consome imagens
+radiográficas digitalizadas e retorna as coordenadas exatas de potenciais descontinuidades ósseas. Para atingir este propósito, o fluxo operacional divide-se em quatro
+macroetapas fundamentais explicadas na imagem abaixo:
+FIGURA 6– FLUXOGRAMA GERAL DO PIPELINE DE DETECÇÃO DE FRATURAS
+ÓSSEAS
+
+Fonte: Próprio autor, 2026.
+
+1. Ingestão e Adequação de Dados: Fase responsável pelo carregamento das radiografias na memória volátil do sistema e pela leitura inicial de suas propriedades
+estruturais.
+
+25
+
+2. Pré-processamento Computacional: Conversão estrita das imagens para escala de cinza (canal único) e redimensionamento padronizado das matrizes de
+pixels. Esta etapa é crucial para a otimização do custo computacional, minimizando o consumo de memória VRAM durante o processamento na GPU.
+3. Inferência via Rede Neural: Processamento matemático do tensor de imagem
+por meio de uma Rede Neural Convolucional baseada na arquitetura YOLO. Nesta
+etapa, a máquina atua extraindo características anatômicas, calculando os mapas
+de regressão e definindo as coordenadas espaciais das anomalias.
+4. Pós-processamento e Saída Visual: Etapa final onde ocorre a renderização
+dos alertas visuais (bounding boxes), acompanhados de seus respectivos índices
+de probabilidade estatística, sobrepostos de maneira não destrutiva à imagem
+médica original.
+4.2
+
+MONTAGEM DO DATASET
+
+O treinamento, a validação e a avaliação de consistência de modelos de Deep
+Learning exigem um conjunto de dados massivo, de alta fidelidade e previamente
+rotulado por especialistas do domínio médico. Para viabilizar a execução deste projeto
+e garantir o alinhamento com as práticas de reprodutibilidade científica, optou-se pela
+utilização do repositório público e anonimizado GRAZPEDWRI-DX (
+, 2022).
+Conforme descrito por
+(2022), o GRAZPEDWRI-DX foi construído a partir de radiografias pediátricas
+de punho obtidas no Departamento de Cirurgia Pediátrica do Hospital Universitário de
+Graz, entre 2008 e 2018. O acervo compreende 10.643 estudos de 6.091 pacientes,
+totalizando 20.327 imagens em projeções tipicamente póstero-anterior e lateral. Os
+autores converteram os exames originais em DICOM para PNG em escala de cinza de
+16 bits, preservando a faixa dinâmica necessária para visualizar microestruturas ósseas,
+e disponibilizaram anotações revisadas por radiologistas pediátricos com experiência
+entre 6 e 29 anos em radiologia musculoesquelética.
+O diferencial técnico que justifica a escolha deste dataset para o escopo desta
+monografia é o seu padrão de anotação supervisionada: o conjunto contém 67.771
+objetos rotulados e 74.459 tags de imagem, incluindo fraturas delimitadas por bounding
+boxes, reações periostais, implantes metálicos e sinais radiológicos associados ao
+trauma. Para fraturas, os especialistas registraram as coordenadas cartesianas (x, y,
+w, h), fornecendo o ground truth indispensável para que o algoritmo aprenda a localizar
+descontinuidades ósseas. O repositório ainda disponibiliza exportações nos formatos
+
+26
+
+PASCAL VOC e YOLO, o que favorece a integração direta com arquiteturas de detecção
+de objetos adotadas neste trabalho.
+A Figura 7 resume as etapas de construção do dataset, desde a extração
+no PACS hospitalar até a disponibilização das anotações em formatos compatíveis
+com aprendizado supervisionado. Embora o padrão DICOM seja o formato clínico de
+referência, as imagens do GRAZPEDWRI-DX já se encontram em PNG de 16 bits após
+de-identificação e normalização histograma, reduzindo a sobrecarga computacional da
+etapa de ingestão sem comprometer a fidelidade radiológica exigida para detecção de
+fraturas sutis (
+, 2022;
+, 2024).
+FIGURA 7– FLUXO DE CONSTRUÇÃO E ANOTAÇÃO DO DATASET
+GRAZPEDWRI-DX
+
+Fonte: Adaptado de Nagy et al., 2022, disponível em: https://doi.org/10.1038/s41597-022-01328-z.
+
+4.3
+
+MODELO CNN
+
+Para a tarefa de detecção e localização das fraturas, o modelo computacional
+adotará a arquitetura de Redes Neurais Convolucionais da família YOLO (You Only
+Look Once), conforme proposto por
+(2016). Diferente de classificadores baseados em propostas de região, que
+exigem múltiplas varreduras computacionais sobre a mesma imagem, esta arquitetura
+destaca-se por tratar a detecção de objetos como um problema unificado de regressão
+espacial.
+A rede atua dividindo a radiografia de entrada em uma grade matricial. Se
+o centro anatômico de uma fratura recair sobre uma célula específica dessa grade,
+
+27
+
+a célula torna-se a responsável matemática por prever as coordenadas da caixa
+delimitadora (bounding box) e o respectivo grau de confiança da presença da lesão.
+Durante a propagação, as camadas convolucionais mais profundas atuam como
+extratores automáticos de características (feature extractors), mapeando desde o
+contraste suave dos tecidos moles até as descontinuidades abruptas e sutis na cortical
+óssea. Essa abordagem de estágio único garante uma velocidade de inferência
+altíssima, o que é um pré-requisito técnico para operar como suporte à decisão em
+tempo real nas unidades de emergência hospitalar (
+, 2016;
+, 2020).
+Na arquitetura YOLO, a imagem de entrada é dividida em uma grade regular
+de células. Cada célula é responsável por prever limites de confiança e coordenadas
+de caixas delimitadoras quando o centro de uma fratura coincide com sua região
+de responsabilidade. Esse paradigma unifica classificação e regressão espacial em
+uma única passagem pela rede, diferenciando-se de detectores em dois estágios que
+primeiro propõem regiões candidatas e depois as refinam (
+, 2016). A Figura 8 ilustra esquematicamente essa lógica aplicada a uma
+radiografia de punho.
+FIGURA 8– REPRESENTAÇÃO ESQUEMÁTICA DA DETECÇÃO YOLO EM GRADE
+COM BOUNDING BOX
+
+Fonte: Adaptado de Redmon et al., 2016, disponível em: https://arxiv.org/abs/1506.02640.
+
+28
+
+4.4
+
+PERTURBAÇÕES
+
+A capacidade de generalização de um modelo de aprendizado profundo (Deep
+Learning) depende de sua resiliência perante as variações inerentes à captura de
+exames no mundo real. Para mitigar o risco de sobreajuste (overfitting) da rede neural
+aos dados específicos do GRAZPEDWRI-DX e garantir a robustez clínica do algoritmo,
+será aplicada uma rotina sistemática de perturbações matemáticas controladas, técnica
+amplamente conhecida como Data Augmentation.
+Essas perturbações serão aplicadas de forma dinâmica e exclusiva durante
+a fase de treinamento. Elas englobam transformações geométricas, como rotações
+angulares limitadas, translações nos eixos e espelhamentos horizontais, simulando a
+variabilidade inevitável no posicionamento físico dos pacientes durante a realização do
+exame de Raio-X.
+Adicionalmente, serão introduzidas perturbações em nível de pixel, ajustando
+aleatoriamente o brilho, o ruído gaussiano e as janelas de contraste da escala de
+cinza. Esta etapa é fundamental para emular as diferenças de calibração, dosagem de
+radiação e processamento de sensores de equipamentos radiológicos de diferentes
+fabricantes. Dessa forma, a inteligência artificial é forçada a focar estritamente nos
+padrões de borda da anatomia da fratura, e não na qualidade geral ou nos artefatos
+visuais da imagem (
+, 2017;
+, 2020).
+Em conjunto, as transformações geométricas e fotométricas ampliam artificialmente a diversidade amostral do GRAZPEDWRI-DX, reduzindo o risco de memorização
+de características espúrias do ambiente de coleta. A literatura de visão computacional
+médica aponta que estratégias de aumento de dados são especialmente relevantes
+em bases hospitalares com variabilidade de posicionamento, idade dos pacientes e
+calibração de equipamentos (
+, 2017). A Figura 9 apresenta exemplos das perturbações previstas para o
+treinamento.
+4.5
+
+ESTRATÉGIA PROPOSTA
+
+A concepção deste sistema de suporte à decisão clínica consolida-se em um
+fluxo tecnológico planejado para integrar o rigor matemático da inteligência artificial à
+realidade das unidades de saúde.
+
+29
+
+FIGURA 9– EXEMPLOS DE TÉCNICAS DE DATA AUGMENTATION PREVISTAS NO
+TREINAMENTO
+
+Fonte: Próprio autor, 2026 (adaptado de Litjens et al., 2017).
+
+4.5.1
+
+Motivação
+
+A interpretação de radiografias sob condições de urgência exige extrema concentração; contudo, médicos plantonistas frequentemente operam sob fadiga cognitiva
+extrema, pressão temporal e um volume massivo de pacientes. O esgotamento visual
+eleva o risco de erros de percepção no diagnóstico por imagem, situação em que
+microfissuras ósseas ou fraturas não deslocadas passam despercebidas. A motivação
+primária deste trabalho é criar uma barreira de segurança tecnológica para evitar esses
+falsos negativos, que resultam em altas indevidas e futuras complicações ortopédicas
+para o paciente (
+, 2020;
+, 2019).
+4.5.2
+
+Ideia Central
+
+A premissa central é desenvolver uma “segunda opinião” automatizada e infatigável. Em vez de substituir o profissional, a inteligência artificial atuará como um filtro
+de segurança concorrente. Quando um exame radiográfico é processado, o sistema
+o analisa em segundo plano e, ao detectar um padrão indicativo de ruptura óssea,
+alerta o médico direcionando o foco visual da sua tela exatamente para a coordenada
+anatômica suspeita, reduzindo o tempo de varredura visual.
+4.5.3
+
+Funcionamento
+
+O ciclo operacional inicia-se com o recebimento do exame em sua forma digital.
+O módulo de pré-processamento normaliza automaticamente a matriz de imagem,
+
+30
+
+convertendo-a para uma escala de cinza padronizada, removendo redundâncias cromáticas e otimizando o custo computacional. A imagem processada é então submetida
+aos tensores da arquitetura convolucional treinada. Em frações de segundo, o modelo extrai as características, realiza a regressão das coordenadas e emite a imagem
+final com a inserção gráfica das bounding boxes sobrepostas às regiões de trauma,
+acompanhadas de um percentual estatístico que reflete a confiança da predição.
+4.5.4
+
+Diferença para Abordagens Existentes
+
+A literatura acadêmica contemporânea possui diversos modelos baseados em
+classificação binária, sistemas que apenas informam ao final do processo se uma
+radiografia “possui fratura” ou “é normal”. A principal distinção desta pesquisa é o foco
+arquitetural na detecção e localização explícita por meio de algoritmos de detecção de
+objetos de estágio único (single-stage detectors). O sistema não fornece apenas um
+veredito opaco, mas oferece explicabilidade visual e espacial por meio das coordenadas
+exatas da lesão, o que aumenta a confiança do corpo clínico na ferramenta.
+4.5.5
+
+Hipótese
+
+A hipótese que rege esta pesquisa é de que a aplicação de um modelo baseado
+em Redes Neurais Convolucionais supervisionadas, treinado em imagens radiográficas
+normalizadas e submetido a perturbações controladas (Data Augmentation), alcançará
+índices de sensibilidade espacial clinicamente viáveis. Postula-se que o sistema será
+capaz de localizar corretamente fraturas ósseas, atingindo altos índices nas métricas
+de Mean Average Precision (mAP) e Intersection over Union (IoU), mitigando as falhas
+de percepção humana em fluxos de triagem de alta demanda (
+, 2014;
+, 2020).
+4.6
+
+CONFIGURAÇÃO EXPERIMENTAL
+
+A condução dos experimentos de aprendizado profundo exige uma infraestrutura
+computacional de alto desempenho, especialmente devido ao volume de operações
+matriciais simultâneas. O treinamento do modelo será realizado em um ambiente
+provido de aceleração de hardware via Unidades de Processamento Gráfico (GPUs)
+compatíveis com a arquitetura CUDA (Compute Unified Device Architecture). A utilização de GPUs é imperativa para paralelizar o cálculo dos tensores durante o algoritmo
+de retropropagação (backpropagation) (
+, 2024;
+
+31
+
+, 2024).
+O ambiente de software será construído utilizando a linguagem Python, apoiado
+por frameworks de tensores modernos para implementação da arquitetura YOLO e
+manipulação do GRAZPEDWRI-DX nos formatos VOC ou YOLO (
+, 2022;
+, 2016). Para garantir a reprodutibilidade científica, os hiperparâmetros da rede
+serão rigorosamente controlados e documentados, incluindo taxa de aprendizado,
+tamanho do lote, número máximo de épocas e limiares de confiança para aceitação de
+detecções.
+O processo de otimização dos pesos da rede utilizará um algoritmo de descida
+de gradiente estocástico avançado, como o otimizador AdamW, que adapta a taxa
+de aprendizado para cada parâmetro isoladamente, acelerando a convergência. A
+função de custo (Loss Function) do modelo será uma composição matemática que
+penaliza três aspectos distintos durante o treinamento: o erro de classificação (identificar incorretamente se há fratura), o erro de localização (desvio nas coordenadas do
+centro da lesão) e o erro de dimensionamento (diferença na altura e largura da caixa
+delimitadora). O conjunto de dados será particionado em subconjuntos de treino, validação e teste, e o treinamento será executado em lotes (batches) definidos de acordo
+com a capacidade de memória VRAM disponível. O número de épocas (epochs) será
+regulado por técnicas de Early Stopping, prevenindo o fenômeno de sobreajuste (
+, 2017).
+4.7
+
+DEFINIÇÃO DA TAREFA
+
+No contexto da visão computacional aplicada à radiologia, a detecção de fraturas
+ósseas não é modelada como uma simples classificação, mas sim formulada como um
+problema simultâneo de classificação binária e regressão espacial contínua.
+Matematicamente, a tarefa consiste em projetar uma função f (x) parametrizada
+por uma rede neural, em que a entrada x é um tensor bidimensional representando os
+pixels da radiografia em escala de cinza. A saída esperada ŷ para cada imagem processada não é um único rótulo, mas sim um vetor estruturado contendo cinco variáveis
+críticas para cada anomalia detectada, conforme a Equação (4.1) e a representação
+esquemática da Figura 10:
+ŷ = [pc , bx , by , bw , bh ]
+
+(4.1)
+
+Nesta formulação, pc representa o índice probabilístico (confiança) de que
+a anomalia identificada seja, de fato, uma fratura. As variáveis contínuas bx e by
+representam as coordenadas espaciais do centro geométrico da caixa delimitadora em
+
+32
+
+relação aos eixos da imagem, enquanto bw e bh definem, respectivamente, a largura e a
+altura da área afetada. A rede neural aprende a mapear o espaço visual da radiografia
+diretamente para este vetor numérico, permitindo que o sistema informe ao profissional
+de saúde a localização exata e a extensão anatômica do trauma (
+, 2016;
+, 2014).
+FIGURA 10– REPRESENTAÇÃO ESQUEMÁTICA DAS COORDENADAS DA CAIXA
+DELIMITADORA
+
+Fonte: Próprio autor, 2026 (adaptado de Redmon et al., 2016).
+
+4.8
+
+MÉTRICAS
+
+A avaliação de modelos de detecção de objetos médicos demanda um rigor
+estatístico superior ao de modelos genéricos. O desempenho do algoritmo será
+mensurado por meio do cruzamento de múltiplas métricas que avaliam tanto a exatidão
+diagnóstica quanto a precisão espacial das marcações. A base destas métricas apoiase na definição de Verdadeiros Positivos (TP), Falsos Positivos (FP) e Falsos Negativos
+(FN). No cenário clínico de pronto-atendimento, o custo de um Falso Negativo (uma
+fratura que a máquina não viu) é altíssimo, tornando a Sensibilidade (Recall) uma
+métrica prioritária.
+As métricas fundamentais incluem a Precisão (P ) e a Sensibilidade (R), calculadas por meio das Equações (4.2) e (4.3):
+
+33
+
+P =
+
+TP
+TP + FP
+
+(4.2)
+
+TP
+(4.3)
+TP + FN
+Para avaliar especificamente a qualidade da localização visual gerada pela rede,
+utiliza-se a métrica espacial de Intersection over Union (IoU). Ela estabelece a taxa de
+sobreposição geométrica entre a predição da máquina (B̂) e a marcação real feita pelo
+médico no dataset (B), conforme a Equação (4.4):
+R=
+
+IoU =
+
+Área(B̂ ∩ B)
+Área(B̂ ∪ B)
+
+(4.4)
+
+Neste trabalho, um Verdadeiro Positivo só é contabilizado se a rede não apenas
+detectar a fratura, mas desenhar a caixa com um IoU ≥ 0.5 em relação à marcação
+real. Por fim, o modelo global será avaliado pela Mean Average Precision (mAP), que
+consolida o desempenho da rede. O mAP calcula a área sob a curva de PrecisãoSensibilidade para diferentes limiares de IoU, fornecendo uma métrica escalar robusta
+que reflete a capacidade do modelo de operar com alta confiabilidade na identificação
+de descontinuidades ósseas (
+, 2014;
+, 2020;
+, 2017).
+
+34
+
+5 RESULTADOS ESPERADOS E DISCUSSÃO
+Este capítulo apresenta os resultados esperados e os critérios de discussão
+previstos para a validação do sistema de detecção proposto. Como o trabalho se
+encontra em fase de delineamento metodológico, evitam-se percentuais experimentais
+não comprovados; em seu lugar, são definidos os parâmetros que orientarão a futura
+análise quantitativa e qualitativa da rede neural.
+5.1
+
+RESULTADOS BASELINE
+
+Para estabelecer um parâmetro de comparação rigoroso (baseline), definiu-se
+a avaliação de uma arquitetura de detecção genérica, treinada a partir do zero (from
+scratch) e sem a aplicação de técnicas avançadas de pré-processamento radiológico
+ou Data Augmentation. O objetivo desta etapa preliminar foi mensurar o desempenho
+bruto de uma rede neural padrão diante da complexidade das estruturas ósseas.
+Espera-se que os resultados do modelo baseline evidenciem dificuldades na
+localização de microfissuras e fraturas pouco deslocadas, especialmente quando treinado sem técnicas de pré-processamento radiológico e sem aumento de dados. Essa
+etapa servirá como referência comparativa para mensurar o impacto das estratégias
+propostas (
+, 2017;
+, 2022).
+5.2
+
+RESULTADOS DA NOVA TÉCNICA
+
+A aplicação da estratégia proposta — incorporando a normalização de matrizes
+para escala de cinza, o Aprendizado por Transferência (Transfer Learning) e as perturbações controladas — deverá favorecer a convergência do modelo. A avaliação será
+realizada no conjunto de teste do GRAZPEDWRI-DX, considerando um limiar de Intersection over Union (IoU) de 0.5 como referência mínima para contabilizar detecções
+espacialmente corretas (
+, 2022;
+, 2020;
+, 2014).
+Qualitativamente, espera-se que o modelo gere bounding boxes coesas ao
+redor das descontinuidades corticais, acompanhadas de índices de confiança (pc )
+consistentes. A análise deverá verificar se a rede atua como extrator especializado de
+características ósseas, reduzindo falsos negativos em relação ao modelo de referência.
+
+35
+
+5.3
+
+COMPARAÇÃO
+
+O contraste entre o modelo genérico (baseline) e a técnica proposta deverá
+evidenciar o impacto da engenharia de dados no aprendizado profundo médico. A
+comparação considerará principalmente a evolução da sensibilidade, do mAP e da
+estabilidade das marcações em imagens com diferentes níveis de contraste.
+Mais importante para o cenário de triagem hospitalar, a expectativa é reduzir
+falsos negativos, pois esse tipo de erro apresenta maior risco clínico. Enquanto o
+modelo inicial tende a falhar na delimitação de fraturas sobrepostas a tecidos moles
+densos, a técnica proposta busca manter enquadramento espacial preciso por meio do
+ajuste fino (fine-tuning) dos hiperparâmetros e da normalização de contraste.
+5.4
+
+ROBUSTEZ
+
+Para além das métricas padrão, a resiliência computacional do algoritmo foi
+posta à prova. A avaliação de robustez submeteu o modelo otimizado a um conjunto de
+radiografias com ruído gaussiano induzido e distorções intencionais de brilho, emulando
+artefatos gerados por equipamentos de Raio-X de baixa dosagem ou mal calibrados.
+Sob degradação visual, espera-se que o modelo preserve desempenho suficiente para indicar padrões suspeitos, ainda que com queda nas métricas globais. Esse
+comportamento será utilizado para verificar se a rede neural não memorizou o dataset
+(overfitting), mas aprendeu características geométricas associadas às rupturas ósseas.
+5.5
+
+DISCUSSÃO
+
+Os resultados esperados indicam a viabilidade da integração de Redes Neurais
+Convolucionais de estágio único (single-stage detectors) no fluxo de trabalho radiológico.
+A velocidade de inferência da arquitetura YOLO tende a favorecer o processamento em
+tempo real, fornecendo alertas visuais imediatos ao médico emergencialista (
+, 2016;
+, 2020).
+Embora se espere bom desempenho na identificação de fraturas evidentes e
+fraturas não deslocadas, limitações computacionais podem ser observadas em fraturas
+por estresse em estágios muito iniciais, cuja densidade radiográfica se confunde com
+a trabécula óssea normal. Contudo, como a premissa do sistema é atuar como uma
+segunda opinião, funcionando como filtro de segurança para mitigar a fadiga médica,
+a análise buscará validar o uso da Inteligência Artificial como ferramenta de apoio à
+decisão clínica (
+
+36
+
+, 2019;
+, 2020).
+
+37
+
+6 CONSIDERAÇÕES FINAIS
+O presente trabalho propôs o delineamento de um sistema de suporte à decisão
+clínica baseado em Redes Neurais Convolucionais, com o intuito de otimizar a detecção
+de fraturas ósseas em imagens radiográficas. A partir do levantamento bibliográfico
+realizado, evidenciou-se que a fadiga visual e a alta demanda nos setores de urgência
+hospitalar são fatores críticos que contribuem para falhas diagnósticas (
+, 2020;
+, 2019). Diante deste cenário, a aplicação de algoritmos de detecção de objetos
+de estágio único (single-stage detectors) surge como uma alternativa tecnológica viável
+e necessária para atuar como uma camada de segurança concorrente (
+, 2016;
+, 2017).
+Nesta fase preliminar do projeto, foram estabelecidos os pilares fundamentais
+para a construção da solução. A fundamentação teórica validou a escolha da arquitetura
+YOLO e a eficácia das técnicas de Transfer Learning no processamento de imagens
+médicas (
+, 2016;
+, 2020;
+, 2024). Ademais, a definição da metodologia permitiu estruturar o pipeline
+de dados, selecionando o repositório GRAZPEDWRI-DX como fonte primária para
+o treinamento supervisionado, garantindo o rigor científico e a disponibilidade de
+metadados confiáveis (ground truth) (
+, 2022).
+Como trabalhos futuros e próximos passos para a consolidação desta pesquisa,
+dar-se-á o início à fase de implementação computacional. As próximas etapas englobam o pré-processamento das matrizes de imagem, a aplicação das técnicas de
+Data Augmentation descritas e o treinamento efetivo da rede neural em ambiente com
+aceleração de hardware (GPU) (
+, 2017;
+, 2024).
+Espera-se que, ao finalizar as validações experimentais, o modelo atinja níveis
+de Sensibilidade e Mean Average Precision (mAP) que comprovem a hipótese inicial,
+resultando em uma ferramenta computacional capaz de auxiliar ativamente os profissionais de saúde e aumentar a segurança dos pacientes no fluxo de triagem hospitalar
+(
+, 2020;
+, 2014).
+
+38
+
+REFERÊNCIAS
+CRESWELL, J. W. Research design: qualitative, quantitative, and mixed methods
+approaches. 4. ed. Thousand Oaks: SAGE, 2014.
+DEEP LEARNING BOOK. Introdução às Redes Neurais Convolucionais. Data
+Science Academy, 2024. Disponível em: https://www.deeplearningbook.com.br/
+introducao-as-redes-neurais-convolucionais/. Acesso em: 8 abr. 2026.
+DICOM STANDARD COMMITTEE. Digital Imaging and Communications in
+Medicine (DICOM) Standard. 2024. Disponível em: https://www.dicomstandard.org/.
+Acesso em: 14 abr. 2026.
+GIL, A. C. Como elaborar projetos de pesquisa. 7. ed. São Paulo, SP: Atlas, 2022.
+IBM. O que são Redes Neurais Convolucionais? IBM Think, 2024. Disponível em:
+https://www.ibm.com/br-pt/think/topics/convolutional-neural-networks. Acesso em: 10
+abr. 2026.
+KIM, D. H.; MACKINNON, T. Artificial intelligence in fracture detection: a systematic
+review. Journal of Medical Imaging, SPIE, v. 7, n. 1, p. 010901, 2020. Disponível em:
+https://doi.org/10.1117/1.JMI.7.1.010901. Acesso em: 3 mai. 2026.
+KÖCHE, J. C. Fundamentos de metodologia científica: teoria da ciência e
+iniciação à pesquisa. 29. ed. Petrópolis: Vozes, 2011.
+LAKATOS, E. M.; MARCONI, M. d. A. Fundamentos de metodologia científica. 9. ed.
+São Paulo: Atlas, 2021.
+LIN, T.-Y. et al. Microsoft coco: Common objects in context. In: European
+Conference on Computer Vision (ECCV). [s.n.], 2014. p. 740–755. Disponível em:
+https://arxiv.org/abs/1405.0312. Acesso em: 10 mai. 2026.
+LITJENS, G. et al. A survey on deep learning in medical image analysis.
+Medical Image Analysis, v. 42, p. 60–88, 2017. Disponível em: https:
+//doi.org/10.1016/j.media.2017.07.004. Acesso em: 15 mai. 2026.
+NAGY, E. et al. Pediatric wrist trauma x-ray dataset (grazpedwri-dx) for machine
+learning. Scientific Data, Nature Publishing Group, v. 9, n. 1, p. 222, 2022. Disponível
+em: https://doi.org/10.1038/s41597-022-01328-z. Acesso em: 27 mai. 2026.
+RAJPURKAR, P. et al. CheXNet: Radiologist-Level Pneumonia Detection on
+Chest X-Rays with Deep Learning. Universidade de Stanford, 2017. Disponível em:
+https://arxiv.org/abs/1711.05225. Acesso em: 12 abr. 2026.
+REDMON, J. et al. You only look once: Unified, real-time object detection. In:
+Proceedings of the IEEE Conference on Computer Vision and Pattern Recognition.
+[s.n.], 2016. p. 779–788. Disponível em: https://arxiv.org/abs/1506.02640. Acesso em:
+28 mai. 2026.
+RONNEBERGER, O.; FISCHER, P.; BROX, T. U-net: Convolutional networks for
+biomedical image segmentation. In: Medical Image Computing and ComputerAssisted Intervention (MICCAI). [s.n.], 2015. p. 234–241. Disponível em:
+https://arxiv.org/abs/1505.04597. Acesso em: 15 abr. 2026.
+
+39
+
+SEVERINO, A. J. Metodologia do trabalho científico. 24. ed. São Paulo: Cortez,
+2016.
+SMITH, J. et al. Automated dicom metadata extraction for clinical workflow.
+Journal of Digital Imaging, v. 34, n. 2, p. 412–425, 2021. Disponível em:
+https://doi.org/10.1007/s10278-020-00412-3. Acesso em: 18 abr. 2026.
+TOPOL, E. J. High-performance medicine: the convergence of human and
+artificial intelligence. Nature Medicine, v. 25, n. 1, p. 44–56, 2019. Disponível em:
+https://doi.org/10.1038/s41591-018-0300-7. Acesso em: 16 abr. 2026.
+VENTURUS. Como aplicar Visão Computacional na área da saúde. Venturus
+Insights, 2024. Disponível em: https://www.venturus.org.br/insights/blog/
+como-aplicar-visao-computacional-na-area-da-saude. Acesso em: 20 abr. 2026.
+VISO.AI. Computer Vision in Healthcare: Applications and Benefits. 2024.
+Disponível em: https://viso.ai/applications/computer-vision-in-healthcare/. Acesso em:
+22 abr. 2026.
+ZHOU, S. K. et al. Deep Learning for Medical Image Analysis. Academic Press,
+2020. Disponível em: https://www.researchgate.net/publication/319249582\_Deep\
+_Learning\_for\_Medical\_Image\_Analysis. Acesso em: 25 abr. 2026.
+ZUIDERVELD, K. Contrast limited adaptive histogram equalization. In: Graphics Gems
+IV. [S.l.]: Academic Press, 1994. p. 474–485.
+
+

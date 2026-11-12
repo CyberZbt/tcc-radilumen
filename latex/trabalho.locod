@@ -1,0 +1,5 @@
+\contentsline {codigo}{\numberline {1}{\ignorespaces PRÉ-PROCESSAMENTO COM NORMALIZAÇÃO E CLAHE}}{34}{codigo.caption.23}%
+\contentsline {codigo}{\numberline {2}{\ignorespaces CONFIGURAÇÃO DO EXPERIMENTO BASELINE}}{35}{codigo.caption.24}%
+\contentsline {codigo}{\numberline {3}{\ignorespaces CONFIGURAÇÃO DO EXPERIMENTO PROPOSTA}}{35}{codigo.caption.25}%
+\contentsline {codigo}{\numberline {4}{\ignorespaces CHAMADA DE TREINAMENTO YOLO A PARTIR DO ARQUIVO DE CONFIGURAÇÃO}}{36}{codigo.caption.26}%
+\contentsline {codigo}{\numberline {5}{\ignorespaces AVALIAÇÃO DO MODELO NO CONJUNTO DE TESTE}}{36}{codigo.caption.27}%

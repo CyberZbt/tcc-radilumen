@@ -1,0 +1,18 @@
+# Trecho essencial — configs/proposed.yaml
+experiment: proposed
+model: yolov8n.pt
+data: dataset/yolo_8bit/fracture_only/data_fracture.yaml
+pretrained: true
+epochs: 100
+imgsz: 640
+batch: 16
+optimizer: AdamW
+# Data augmentation (proposta)
+hsv_h: 0.015
+hsv_s: 0.4
+hsv_v: 0.4
+degrees: 10.0
+translate: 0.1
+scale: 0.3
+fliplr: 0.5
+mosaic: 1.0

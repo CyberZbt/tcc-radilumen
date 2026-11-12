@@ -1,0 +1,159 @@
+========================================================================
+SLIDE 1
+========================================================================
+O QUE FALAR
+Bom dia. Meu nome é Lucas Rodrigues Zabot. Este é o TCC de Ciência da Computação, orientado pelo professor Sérgio Marques.
+O título oficial está no topo. O sistema que construí se chama RADILÚMEN: a inteligência artificial ilumina o ponto da fratura na radiografia, e o médico decide.
+Não é um diagnóstico automático. É uma segunda opinião visual.
+A imagem de fundo é um raio-X de punho — exatamente o tipo de exame que o modelo vê.
+
+========================================================================
+SLIDE 2
+========================================================================
+O QUE FALAR
+O problema não é falta de raio-X. É o contrário: o volume no plantão cresceu e o profissional lê muitos exames, cansado, com pouco tempo.
+Fratura de punho, principalmente a sutil, é fácil de passar. Isso gera alta indevida e custo depois.
+O que faltava era um alerta visual: uma caixa dizendo “olhe aqui”. Não um robô fechando o caso.
+Quem usaria: médico de urgência e radiologista. O hospital inteiro, o PACS, fica fora deste TCC.
+
+========================================================================
+SLIDE 3
+========================================================================
+O QUE FALAR
+O RADILÚMEN faz três coisas, e só três.
+Detecta: tem fratura nesta imagem?
+Localiza: desenha a caixa em cima do osso, com uma confiança.
+Apoia: o médico confirma ou descarta. Eu não substituo o profissional.
+Se a banca perguntar “então é um diagnóstico?”: não. É filtro de segurança contra fadiga. Segunda opinião.
+
+========================================================================
+SLIDE 4
+========================================================================
+O QUE FALAR
+Objetivo geral: achar a fratura no punho e mostrar a caixa.
+Específicos, na ordem em que fiz:
+Um — treinar a YOLO numa base pública, em PNG, sem nome de paciente.
+Dois — medir precisão, sensibilidade e mAP no teste. O teste é separado por paciente, para não vazar a mesma pessoa.
+Três — um software em que se envia a imagem e se vê o resultado.
+No próximo slide eu separo o que está pronto do que é trabalho futuro.
+
+========================================================================
+SLIDE 5
+========================================================================
+O QUE FALAR
+A banca vai olhar o título e perguntar: “onde está o DICOM?”
+Resposta honesta:
+O exame no hospital nasce em DICOM. Por isso o título.
+O que eu treinei e medi foi PNG de 8 bits, já sem nome de paciente.
+Se alguém mandar um DICOM no programa, ele converte, descarta o cabeçalho e trabalha só na imagem.
+O que ainda não fiz: gravar a caixa de volta no arquivo DICOM, nem ligar no PACS do hospital. Isso é trabalho futuro, não falha do modelo.
+
+========================================================================
+SLIDE 6
+========================================================================
+O QUE FALAR
+Não inventei visão computacional em raio-X. Já existiam três famílias:
+Classificar: a rede diz “tem fratura” ou “não tem”. Não aponta onde. O médico ainda precisa varrer o filme inteiro.
+Segmentar: desenha o contorno pixel a pixel. Mais preciso, mais pesado, mais lento para uma triagem.
+Detectar com caixa — o que o RADILÚMEN faz: uma caixa no punho, rápida, na tela.
+A minha contribuição não é a YOLO em si. É treinar, medir e entregar essa caixa num fluxo que o médico consegue ver.
+
+========================================================================
+SLIDE 7
+========================================================================
+O QUE FALAR
+Como a rede “enxerga”:
+CNN: camadas. Primeiro bordas, depois o formato do osso, depois o intervalo da fratura — o modelo aprende isso sozinho, eu não desenhei a regra.
+YOLO: You Only Look Once. Uma passada na imagem inteira, devolve a caixa e um número de confiança.
+Usei a versão leve, YOLOv8n, porque a triagem precisa ser rápida.
+A figura à esquerda mostra a grade: a rede varre a imagem e escolhe a célula onde está a fratura.
+
+========================================================================
+SLIDE 8
+========================================================================
+O QUE FALAR
+O fluxo, da esquerda para a direita:
+O exame chega em DICOM. Vira PNG. O nome do paciente some. A YOLO desenha a caixa. O médico vê na tela.
+Números para memorizar:
+Cerca de 20 mil imagens, base GRAZPEDWRI-DX, punho, de Graz.
+Corte 80 treino, 10 validação, 10 teste — por paciente, não por arquivo. Assim a mesma criança não aparece no treino e no teste.
+Duas fases: primeiro um recorte de cerca de 1.600 imagens para acertar o método. Depois a base completa, cerca de 16 mil no treino.
+A GPU foi no Google Colab. No meu PC não dava para treinar a versão grande.
+
+========================================================================
+SLIDE 9
+========================================================================
+O QUE FALAR
+Duas receitas, mesma rede, mesmo conjunto, para ser justo.
+Baseline: YOLO do zero. Sem pesos prontos, sem aumentar os dados. É a pergunta “e se eu não fizesse nada especial?”
+RADILÚMEN: três escolhas.
+Um — CLAHE, contraste local, porque fratura sutil some no cinza.
+Dois — transfer learning: a rede já vinha treinada em fotos do mundo, eu só especializei no osso.
+Três — augmentação: giro, zoom, para não decorar a pose.
+Ferramentas: Python, Ultralytics YOLO, Colab.
+Se perguntarem “por que não ResNet classificando?”: porque eu precisava da caixa, não só do sim/não.
+
+========================================================================
+SLIDE 10
+========================================================================
+O QUE FALAR
+Isto é o programa rodando. Três painéis: original, imagem limpa, caixa na fratura.
+Não substitui o médico. O médico confirma ou descarta.
+A demo ao vivo está no ar: viewdicom-tcc.web.app
+Se a banca pedir, abro o site, envio um PNG de punho e mostro a caixa.
+O modelo roda no navegador, em ONNX — não depende do meu notebook ligado.
+Se o Wi-Fi falhar, tenho a mesma tela no PDF e no OneDrive.
+
+========================================================================
+SLIDE 11
+========================================================================
+O QUE FALAR
+Primeiro experimento: recorte de cerca de 1.600 imagens, mesmas épocas, mesma YOLO.
+Baseline, do zero: 58% de mAP. Abaixo da meta de 70% que eu tinha no projeto.
+Com CLAHE, transfer e augmentação: 84%. Passamos da meta.
+O ganho não é “mágica da YOLO”. É contraste + pesos prontos + variação das imagens.
+Este número ainda não é o resultado oficial. É a prova de que a receita funciona. O oficial vem no próximo slide.
+
+========================================================================
+SLIDE 12
+========================================================================
+O QUE FALAR
+Resultado oficial, base completa, teste separado por paciente, 2.026 imagens de teste.
+Memorize estes três:
+mAP a IoU 0,5: 92,9%. É o quanto a caixa acerta o lugar da fratura.
+Precisão: 92,2%. Quando o sistema marca, na maior parte das vezes acertou.
+Sensibilidade, recall: 86,4%. Ainda perde cerca de 14% das fraturas. Por isso o médico não pode desligar o olho.
+Caveat, fale em voz alta: estes números valem nesta base pública de punho. Não medem se o plantão erra menos com o sistema ligado. Isso seria um estudo clínico, e eu não fiz.
+
+========================================================================
+SLIDE 13
+========================================================================
+O QUE FALAR
+O sistema também erra. Mostre as duas fotos.
+Esquerda: falso positivo. Marcou o metal, o material de síntese, como se fosse fratura. Contraste alto engana a rede.
+Direita: falso negativo. Fratura sutil, não marcou nada. O médico precisaria olhar sozinho.
+Por isso a caixa é um aviso, não um laudo. O médico fecha o caso.
+Se perguntarem o limiar: usei confiança 0,40 nestes recortes para mostrar o erro de verdade, não esconder.
+
+========================================================================
+SLIDE 14
+========================================================================
+O QUE FALAR
+Feche em quatro frases, sem ler o slide:
+Objetivos cumpridos: treinei o modelo, as métricas passaram de 70%, existe uma tela com a caixa.
+O que importa na prática: filtro contra o cansaço. Segunda opinião. Nunca sozinho.
+Dificuldades reais: GPU, PNG sem nome, checkpoint, Python que no PC da banca pode não abrir — por isso o site.
+Depois: ruído, limiar, metal. Um dia gravar DICOM de saída e medir com médico no plantão.
+Não prometa hospital implantado. Prometa o que está no ar hoje.
+
+========================================================================
+SLIDE 15
+========================================================================
+O QUE FALAR
+Obrigado. Dúvidas.
+Se pedirem o programa: abra viewdicom-tcc.web.app, envie um punho, mostre a caixa.
+Se pedirem o código e o PDF: OneDrive da disciplina.
+Se perguntarem “pode diagnosticar sozinho?”: não. Apoio visual.
+Se perguntarem “funciona em outro osso?”: treinei só punho. Outro sítio exigiria outro treino.
+Se perguntarem o nome: RADILÚMEN — radiografia + lúmen, a luz no ponto da fratura.
+Agradeça o professor Sérgio Marques e a banca.

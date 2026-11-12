@@ -1,0 +1,18 @@
+# Trecho essencial — configs/baseline.yaml
+experiment: baseline
+model: yolov8n.yaml
+data: dataset/yolo/fracture_only/data_fracture.yaml
+pretrained: false
+epochs: 100
+imgsz: 640
+batch: 16
+optimizer: AdamW
+# Augmentation desligada
+hsv_h: 0.0
+hsv_s: 0.0
+hsv_v: 0.0
+degrees: 0.0
+translate: 0.0
+scale: 0.0
+fliplr: 0.0
+mosaic: 0.0

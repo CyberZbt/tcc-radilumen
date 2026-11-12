@@ -1,0 +1,41 @@
+COMO RODAR O DETECTOR (software de demonstração)
+================================================
+Requisitos: Windows 10+, Python 3.10 ou 3.13, 8 GB de RAM.
+Não precisa de GPU para testar uma imagem.
+
+1) Abra o PowerShell nesta pasta:  2_programa\codigo
+
+2) Crie o ambiente e instale as bibliotecas:
+
+   python -m venv venv
+   .\venv\Scripts\Activate.ps1
+   pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
+   pip install -r requirements.txt
+
+3) Abra a interface:
+
+   streamlit run app/streamlit_app.py
+
+   O navegador abre em http://localhost:8501
+   O modelo carregado é weights\final_proposed.pt
+
+4) Em "Envie uma radiografia", escolha:
+
+   exemplos\punho_fratura.jpg
+
+   (PNG, JPG ou DICOM também são aceitos. Se for DICOM, o programa
+   converte para PNG e descarta o cabeçalho com dados do paciente.)
+
+5) Interpretação
+   - Caixa na imagem = hipótese de fratura, com confiança de 0 a 1.
+   - Sem caixa acima do limiar NÃO prova que não há fratura.
+   - Isto é apoio visual. Não substitui avaliação médica.
+   - O sistema NÃO grava a saída de volta em DICOM.
+
+Atalho sem instalar nada
+------------------------
+https://viewdicom-tcc.web.app
+(mesmo modelo, rodando no navegador)
+
+Mais detalhes: Apêndices A e B de 1_monografia\trabalho.pdf
+Treino no Colab: codigo\COLAB.md
