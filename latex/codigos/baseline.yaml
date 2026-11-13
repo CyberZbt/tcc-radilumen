@@ -1,4 +1,5 @@
-# Trecho essencial — configs/baseline.yaml
+# Trecho essencial - configs/baseline.yaml
+# Fase oficial: 100 epocas. Subset exploratorio: --epochs 30
 experiment: baseline
 model: yolov8n.yaml
 data: dataset/yolo/fracture_only/data_fracture.yaml

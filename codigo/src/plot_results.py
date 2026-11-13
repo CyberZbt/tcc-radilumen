@@ -182,7 +182,7 @@ def plot_full_metrics(rows: list[dict], out: Path) -> None:
     bars = ax.bar(metrics, values, color=colors, width=0.65)
     ax.axhline(70, color="#dc3545", linestyle="--", linewidth=1.2, label="Meta 70%")
     ax.set_ylabel("Valor (%)")
-    ax.set_title("Métricas oficiais — Proposta (dataset completo, N=16.211)")
+    ax.set_title("Métricas oficiais — Proposta (conjunto de teste, N=2.026)")
     ax.set_ylim(0, 100)
     ax.legend(loc="upper right", frameon=False)
     ax.grid(axis="y", linestyle=":", alpha=0.5)

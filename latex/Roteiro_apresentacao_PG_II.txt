@@ -150,6 +150,18 @@ Não prometa hospital implantado. Prometa o que está no ar hoje.
 SLIDE 15
 ========================================================================
 O QUE FALAR
+Diga isto antes da banca perguntar. É o slide que sobe a nota.
+Um — as métricas oficiais são do teste, 2.026 imagens. Dezesseis mil é o treino. Foi erro de legenda, já corrigido no PDF.
+Dois — não fiz ablação. O ganho de 26 pontos no subset é do pacote inteiro.
+Três — não treinei baseline no dataset completo. Por isso não comparo 58 com 92,9 como se fosse só a técnica.
+Quatro — 86,37% de sensibilidade é no protocolo de mAP, conf 0,001. No software o médico vê 0,25. Não medi o par P/R nesse limiar.
+Cinco — uma rodada, semente 42. Sem GRAZPEDWRI-DX de outros autores no texto: o capítulo de relacionados foi validado em março e não reabri.
+Se perguntarem Ju e Cai 2023: “existem trabalhos no mesmo dataset; não os incluí e não cito números de memória.”
+
+========================================================================
+SLIDE 16
+========================================================================
+O QUE FALAR
 Obrigado. Dúvidas.
 Se pedirem o programa: abra viewdicom-tcc.web.app, envie um punho, mostre a caixa.
 Se pedirem o código e o PDF: OneDrive da disciplina.

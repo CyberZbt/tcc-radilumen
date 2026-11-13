@@ -1,4 +1,4 @@
-# Trecho essencial — src/train.py
+# Trecho essencial - src/train.py
 from ultralytics import YOLO
 from src.utils import load_yaml, resolve_data_path, resolve_device, resolve_model_path
 from src.train import build_train_kwargs

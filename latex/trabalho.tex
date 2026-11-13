@@ -49,7 +49,7 @@ Universidade Tuiuti do Paraná, como requisito à obtenção do grau de Bacharel
 
 % Resumo
 \begin{resumo}
-O presente trabalho desenvolve e avalia um sistema de suporte à decisão clínica para detecção e localização de fraturas de punho em radiografias, com interface visual por \textit{bounding boxes} e atenção à privacidade no uso de imagens médicas. O treinamento supervisionado utilizou o repositório público GRAZPEDWRI-DX em PNG de 16 bits --- e não em DICOM bruto ---, pois o arquivo DICOM carrega dados identificadores do paciente no cabeçalho, enquanto o PNG preserva somente a imagem. Todas as amostras do \textit{pipeline} foram convertidas e processadas em PNG (incluindo 8 bits + CLAHE), com \textit{Transfer Learning} via YOLOv8n \cite{jocher2023ultralytics} e \textit{Data Augmentation}. Os experimentos foram executados em GPU no Google Colab, em duas fases: exploratória (1\,600 imagens de treino) e oficial (conjunto completo). No teste do subset, a proposta atingiu mAP@0,5 de 84,43\% (acima da meta orientativa de 70\%), superando o \textit{baseline} (58,02\%). No dataset completo, a proposta alcançou precisão de 92,21\%, sensibilidade de 86,37\% e mAP@0,5 de 92,94\%. Complementarmente, implementou-se um software de demonstração que recebe PNG, converte DICOM para PNG descartando o cabeçalho identificador, quando essa for a origem, e exibe a original à esquerda e a imagem processada à direita. O encapsulamento da saída novamente em DICOM, para integração a sistemas hospitalares, permanece como trabalho futuro. O sistema atua como segunda opinião automatizada, sem substituir a avaliação médica.
+O presente trabalho desenvolve e avalia um sistema de suporte à decisão clínica para detecção e localização de fraturas de punho em radiografias, com interface visual por \textit{bounding boxes} e atenção à privacidade no uso de imagens médicas. O treinamento supervisionado utilizou o repositório público GRAZPEDWRI-DX em PNG de 16 bits --- e não em DICOM bruto ---, pois o arquivo DICOM carrega dados identificadores do paciente no cabeçalho, enquanto o PNG preserva somente a imagem. Todas as amostras do \textit{pipeline} foram convertidas e processadas em PNG (incluindo 8 bits + CLAHE), com \textit{Transfer Learning} via YOLOv8n \cite{jocher2023ultralytics} e \textit{Data Augmentation}. Os experimentos foram executados em GPU no Google Colab, em duas fases: exploratória (1\,600 imagens de treino, 30 épocas) e oficial (conjunto completo, 100 épocas). No teste do subset, a proposta atingiu mAP@0,5 de 84,43\% (acima da meta interna de 70\%), superando o \textit{baseline} (58,02\%). No teste do dataset completo (2\,026 imagens), a proposta alcançou precisão de 92,21\%, sensibilidade de 86,37\% e mAP@0,5 de 92,94\%. Complementarmente, implementou-se um software de demonstração que recebe PNG, converte DICOM para PNG descartando o cabeçalho identificador, quando essa for a origem, e exibe a original à esquerda e a imagem processada à direita. O encapsulamento da saída novamente em DICOM, para integração a sistemas hospitalares, permanece como trabalho futuro. O sistema atua como segunda opinião automatizada, sem substituir a avaliação médica.
 
 \palavraschave{Inteligência Artificial; \textit{Transfer Learning}; Fraturas Ósseas; \textit{Deep Learning}; Redes Neurais Convolucionais; DICOM}
 \end{resumo}
@@ -101,7 +101,7 @@ O presente trabalho desenvolve e avalia um sistema de suporte à decisão clíni
 \chapter{Introdução}
 \label{cap:introducao}
 
-A radiologia digital revolucionou o diagnóstico médico ao permitir que exames de imagem fossem armazenados e compartilhados de forma instantânea por meio do padrão DICOM (\textit{Digital Imaging and Communications in Medicine}). No entanto, o aumento exponencial na demanda por exames em unidades de pronto-atendimento gerou um novo desafio: a sobrecarga dos profissionais de saúde. Em cenários de urgência, a fadiga e o alto volume de pacientes podem induzir a erros na detecção de fraturas ósseas sutis, comprometendo a segurança do paciente e a eficácia do tratamento. Neste trabalho, a lacuna corresponde à ausência de ferramentas automatizadas de triagem em tempo real nos hospitais, apesar do avanço da inteligência artificial na medicina \cite{topol2019,kim2020}.
+A radiologia digital revolucionou o diagnóstico médico ao permitir que exames de imagem fossem armazenados e compartilhados de forma instantânea por meio do padrão DICOM (\textit{Digital Imaging and Communications in Medicine}). No entanto, o aumento exponencial na demanda por exames em unidades de pronto-atendimento gerou um novo desafio: a sobrecarga dos profissionais de saúde. Em cenários de urgência, a fadiga e o alto volume de pacientes podem induzir a erros na detecção de fraturas ósseas sutis, comprometendo a segurança do paciente e a eficácia do tratamento. Neste trabalho, a lacuna corresponde à ausência de ferramentas automatizadas de triagem visual nos hospitais, apesar do avanço da inteligência artificial na medicina \cite{topol2019,kim2020}.
 
 A interpretação dessas radiografias é uma tarefa de alta responsabilidade que, frequentemente, ocorre sob condições de pressão temporal. A fadiga cognitiva em turnos extensos e a alta rotatividade associam-se a erros de percepção, nos quais fraturas sutis ou microfissuras não são identificadas inicialmente \cite{kim2020,topol2019}. Essa lacuna diagnóstica gera um ciclo de ineficiência, resultando em altas indevidas, complicações clínicas posteriores e aumento dos custos operacionais para as instituições de saúde. Diante deste cenário, formula-se o seguinte problema de pesquisa: de que maneira a implementação de Redes Neurais Convolucionais (CNN) pode atuar como uma camada de segurança adicional na detecção e localização automática de fraturas ósseas, reduzindo a incidência de falsos negativos em um conjunto público de radiografias de punho, como etapa prévia a qualquer uso em urgência médica?
 
@@ -112,6 +112,8 @@ Delimitação do que foi efetivamente implementado e testado: (i)~o treino, a va
 A construção da solução empregou \textit{Deep Learning} e \textit{Transfer Learning} sobre radiografias musculoesqueléticas públicas, com pré-processamento de imagens, ajuste fino de redes neurais pré-treinadas e avaliação espacial por \textit{Intersection over Union} (IoU) e \textit{Mean Average Precision} (mAP) \cite{litjens2017survey,redmon2016you,nagy2022grazpedwri}.
 
 Este trabalho está organizado da seguinte forma: o Capítulo 2 apresenta a Fundamentação Teórica, abordando os conceitos do padrão DICOM e o funcionamento da Visão Computacional. O Capítulo 3 descreve os Trabalhos Relacionados, situando esta pesquisa no estado da arte. O Capítulo 4 detalha a Metodologia de construção da solução e as ferramentas para implementação. O Capítulo 5 apresenta os Resultados e a Discussão. O Capítulo 6 traz a Conclusão. Os Apêndices A e B reúnem, respectivamente, o manual de instalação e o manual de utilização do software de demonstração.
+
+A programação e o protótipo desenvolvidos neste trabalho encontram-se disponíveis, em repositório público, no endereço \url{https://github.com/CyberZbt/tcc-radilumen}.
 
 \chapter{Fundamentação Teórica}
 \label{cap:fundamentacao-teorica}
@@ -143,7 +145,7 @@ Neste trabalho a tarefa é detecção com caixa delimitadora em tempo compatíve
 
 \subsection{YOLO: detecção em estágio único}
 
-O YOLO (\textit{You Only Look Once}), proposto por \citeonline{redmon2016you}, formula a detecção de objetos como um único problema de regressão: a rede observa a imagem inteira \textit{uma vez} e prediz, em paralelo, classes e coordenadas de caixas. A radiografia é dividida em uma grade de células; se o centro de uma fratura cair em uma célula, essa célula torna-se responsável por estimar a confiança $p_c$ e o retângulo $(b_x, b_y, b_w, b_h)$. Predições redundantes são filtradas por supressão não máxima (\textit{non-maximum suppression}). Diferentemente do \textit{Faster R-CNN}, não há estágio separado de propostas de região, o que reduz a latência e favorece alertas quase em tempo real --- requisito apontado para apoio à decisão em trauma \cite{redmon2016you,kim2020}.
+O YOLO (\textit{You Only Look Once}), proposto por \citeonline{redmon2016you}, formula a detecção de objetos como um único problema de regressão: a rede observa a imagem inteira \textit{uma vez} e prediz, em paralelo, classes e coordenadas de caixas. A radiografia é dividida em uma grade de células; se o centro de uma fratura cair em uma célula, essa célula torna-se responsável por estimar a confiança $p_c$ e o retângulo $(b_x, b_y, b_w, b_h)$. Predições redundantes são filtradas por supressão não máxima (\textit{non-maximum suppression}). Diferentemente do \textit{Faster R-CNN}, não há estágio separado de propostas de região, o que reduz a latência em relação a detectores de dois estágios. Uma medição pontual em CPU consta no Capítulo~5; não se trata de um estudo de tempo real em GPU hospitalar \cite{redmon2016you,kim2020}.
 
 A família YOLO evoluiu desde a formulação original até implementações contemporâneas. A versão empregada neste trabalho é a YOLOv8n (variante \textit{nano}) da biblioteca Ultralytics \cite{jocher2023ultralytics}: a letra ``n'' indica o menor modelo da série, com menor custo de memória e inferência mais rápida, em troca de capacidade representacional inferior à das variantes maiores. Essa escolha alinha-se ao objetivo de um protótipo de triagem, e não de um sistema hospitalar de máxima acurácia a qualquer custo computacional. Os pesos iniciais advêm de \textit{transfer learning} (pré-treino em imagens naturais) e o ajuste fino ocorre sobre PNG do GRAZPEDWRI-DX, conforme o Capítulo~4.
 
@@ -155,17 +157,13 @@ O processo tradicional de aprendizado de máquina baseia-se na premissa de que o
 
 Conforme definido por \citeonline{ibm2024}, o aprendizado por transferência é uma técnica na qual o conhecimento adquirido por um modelo em um grande conjunto de dados (tarefa de origem) é preservado e reaproveitado para melhorar a generalização em um conjunto de dados diferente, mas relacionado à tarefa de destino. No contexto da radiologia, isso ocorre da seguinte forma:
 
-Reaproveitamento de Pesos: Utiliza-se uma rede previamente treinada em bases de dados genéricas de escala global como o \textit{ImageNet}, que contém milhões de imagens. O algoritmo já aprendeu a identificar formas primitivas universais, como linhas, curvas e contrastes.
+Reaproveitamento de Pesos: neste trabalho, a proposta inicializa o YOLOv8n com o arquivo \texttt{yolov8n.pt}, cujos pesos vêm do pré-treino de detecção no conjunto COCO (imagens naturais), e não do ImageNet. O \textit{baseline} usa a mesma arquitetura com pesos aleatórios (\texttt{yolov8n.yaml}, \texttt{pretrained: false}). A inicialização transfere primitivas visuais já aprendidas (bordas, contrastes, formas) para o domínio radiográfico.
 
-Congelamento e Ajuste Fino (\textit{Fine-Tuning}): As camadas iniciais da arquitetura, responsáveis por essa extração básica de características, são congeladas para preservar o aprendizado. Em seguida, as camadas finais da rede são liberadas e treinadas especificamente com radiografias digitais do domínio-alvo (no presente trabalho, PNG do GRAZPEDWRI-DX derivadas de exames clínicos).
+Ajuste fino: todas as camadas foram atualizadas durante o \texttt{model.train()} da biblioteca Ultralytics. Não se empregou congelamento (\texttt{freeze}) das camadas iniciais; o ganho esperado do \textit{transfer learning} vem da inicialização, não de camadas travadas.
 
-Vantagem Computacional: segundo \citeonline{ibm2024}, essa estratégia reduz drasticamente os custos computacionais, tanto em tempo quanto em uso de GPUs e processadores, necessários para criar o modelo, pois um número menor de iterações (\textit{epochs}) é exigido para atingir a convergência. Além disso, a rede adquire uma capacidade de generalização maior, evitando falhas ao analisar exames de pacientes reais no pronto-socorro.
+Vantagem computacional: segundo \citeonline{ibm2024}, reaproveitar pesos reduz o esforço para atingir convergência em relação ao treino a partir do zero. Neste TCC, essa vantagem foi usada na proposta; o \textit{baseline} permanece \textit{from scratch}, justamente para contrastar o pacote de escolhas da Seção~\ref{sec:estrategia_proposta}.
 
-Essa técnica torna o desenvolvimento da solução proposta viável, permitindo atingir alta precisão diagnóstica em traumas musculoesqueléticos mesmo operando com conjuntos de dados locais menores \cite{zhou2020,ibm2024}.
-
-\subsection{Processo de Treinamento}
-
-O treinamento ocorre de forma hierárquica: as camadas iniciais da rede detectam primitivas simples, como bordas e contrastes básicos, enquanto as camadas profundas interpretam geometrias complexas e texturas específicas da estrutura trabecular óssea \cite{deeplearningbook2024}.
+Essa técnica torna o desenvolvimento da solução proposta viável em um conjunto rotulado de tamanho limitado \cite{zhou2020,ibm2024,jocher2023ultralytics}.
 
 \section{O PADRÃO DICOM E IMAGENS MÉDICAS}
 
@@ -182,15 +180,15 @@ O Processamento Digital de Imagens (PDI) constitui a etapa intermediária entre 
 
 No contexto desta pesquisa, o PDI não substitui o papel das CNNs, mas prepara o \textit{dataset} e o fluxo de inferência para que a rede opere sobre imagens padronizadas, independentemente do equipamento de aquisição. Essa padronização é determinante em ambientes de urgência, nos quais exames provenientes de diferentes aparelhos e protocolos clínicos precisam ser analisados com o mesmo critério de qualidade. Sem esse tratamento prévio, variações de brilho, contraste e resolução podem comprometer a convergência do treinamento e gerar predições instáveis na triagem de traumas musculoesqueléticos \cite{kim2020,zhou2020}.
 
-A seguir, apresentam-se as técnicas de pré-processamento e de explicabilidade que embasam a solução proposta. A primeira subseção aborda filtros e normalização, etapas indispensáveis para realçar estruturas ósseas e compatibilizar os valores dos \textit{pixels} com a entrada da rede neural. A segunda subseção introduz a Inteligência Artificial Explicável (XAI), recurso que permite ao profissional de saúde compreender quais regiões da radiografia influenciaram a decisão do modelo. Esses fundamentos conectam-se, nos capítulos subsequentes, à análise comparativa de trabalhos relacionados, à montagem do \textit{dataset} GRAZPEDWRI-DX, à configuração experimental com arquitetura YOLO e às métricas de avaliação espacial (IoU e mAP), que mensuram a capacidade do sistema de localizar fraturas de forma clinicamente útil.
+A seguir, apresentam-se as técnicas de pré-processamento que embasam a solução proposta --- filtros, normalização e o papel da caixa delimitadora como localização visual, distinta de mapas de explicabilidade. Esses fundamentos conectam-se, nos capítulos subsequentes, à análise comparativa de trabalhos relacionados, à montagem do \textit{dataset} GRAZPEDWRI-DX, à configuração experimental com arquitetura YOLO e às métricas de avaliação espacial (IoU e mAP).
 
 \subsection{Filtros e Normalização}
 
 Para preparar a imagem para a rede neural, o algoritmo \textit{CLAHE (Contrast-Limited Adaptive Histogram Equalization)} é frequentemente aplicado para realçar o contraste local das bordas ósseas sem amplificar o ruído de fundo \cite{zuiderveld1994clahe,litjens2017survey}. Em seguida, aplica-se a normalização dos dados escalonando os valores dos \textit{pixels}, otimizando a convergência computacional e reduzindo a variabilidade entre exames de diferentes equipamentos \cite{litjens2017survey}.
 
-\subsection{Inteligência Artificial Explicável (XAI)}
+\subsection{Localização visual, e não explicabilidade}
 
-Para que o médico confie na análise da máquina, utilizam-se técnicas de IA Explicável, como o \textit{Grad-CAM}. Este método gera mapas de calor indicando matematicamente quais \textit{pixels} tiveram maior peso na decisão da IA, fornecendo uma justificativa visual crucial \cite{viso2024}.
+Este trabalho \textbf{não} implementa \textit{Grad-CAM} nem outras técnicas de Inteligência Artificial Explicável (XAI). A caixa delimitadora indica \textit{onde} o detector propõe a fratura, acompanhada de um índice de confiança: trata-se de localização visual, não de um mapa dos \textit{pixels} que mais pesaram na decisão. Mapas de calor permanecem como trabalho futuro, caso se deseje justificativa por relevância espacial \cite{viso2024}.
 
 \section{MÉTRICAS DE AVALIAÇÃO DE DESEMPENHO}
 
@@ -396,7 +394,7 @@ A Figura~\ref{fig:grazpedwri_fluxo} resume as etapas de construção do \textit{
 
 Para a tarefa de detecção e localização das fraturas, o modelo computacional adotou a arquitetura de Redes Neurais Convolucionais da família YOLO (\textit{You Only Look Once}), proposta originalmente por \citeonline{redmon2016you} e implementada neste trabalho na versão YOLOv8n da biblioteca Ultralytics \cite{jocher2023ultralytics}. Diferente de classificadores baseados em propostas de região, que exigem múltiplas varreduras computacionais sobre a mesma imagem, esta arquitetura destaca-se por tratar a detecção de objetos como um problema unificado de regressão espacial.
 
-A rede atua dividindo a radiografia de entrada em uma grade matricial. Se o centro anatômico de uma fratura recair sobre uma célula específica dessa grade, a célula torna-se a responsável matemática por prever as coordenadas da caixa delimitadora (\textit{bounding box}) e o respectivo grau de confiança da presença da lesão. Durante a propagação, as camadas convolucionais mais profundas atuam como extratores automáticos de características (\textit{feature extractors}), mapeando desde o contraste suave dos tecidos moles até as descontinuidades abruptas e sutis na cortical óssea. Essa abordagem de estágio único garante uma velocidade de inferência altíssima, o que é um pré-requisito técnico para operar como suporte à decisão em tempo real nas unidades de emergência hospitalar \cite{redmon2016you,zhou2020}.
+A rede atua dividindo a radiografia de entrada em uma grade matricial. Se o centro anatômico de uma fratura recair sobre uma célula específica dessa grade, a célula torna-se a responsável matemática por prever as coordenadas da caixa delimitadora (\textit{bounding box}) e o respectivo grau de confiança da presença da lesão. Durante a propagação, as camadas convolucionais mais profundas atuam como extratores automáticos de características (\textit{feature extractors}), mapeando desde o contraste suave dos tecidos moles até as descontinuidades abruptas e sutis na cortical óssea. Essa abordagem de estágio único é, na literatura, associada a menor latência que detectores em dois estágios --- requisito desejável para apoio à decisão, embora este trabalho não reporte milissegundos de inferência como resultado experimental \cite{redmon2016you,zhou2020}.
 
 Na arquitetura YOLO, a imagem de entrada é dividida em uma grade regular de células. Cada célula é responsável por prever limites de confiança e coordenadas de caixas delimitadoras quando o centro de uma fratura coincide com sua região de responsabilidade. Esse paradigma unifica classificação e regressão espacial em uma única passagem pela rede, diferenciando-se de detectores em dois estágios que primeiro propõem regiões candidatas e depois as refinam \cite{redmon2016you}. A Figura~\ref{fig:yolo_grade} ilustra esquematicamente essa lógica aplicada a uma radiografia de punho.
 
@@ -442,11 +440,11 @@ A premissa central é desenvolver uma ``segunda opinião'' automatizada e infati
 
 \subsection{Funcionamento}
 \label{subsec:funcionamento}
-O ciclo operacional do software de demonstração inicia-se com o recebimento da radiografia em PNG --- formato no qual os dados identificadores do paciente não estão presentes. Caso o arquivo enviado esteja em DICOM, a conversão para PNG já está implementada na interface: retém-se apenas a imagem e descarta-se o cabeçalho com dados pessoais, antes da inferência. O módulo de pré-processamento normaliza a matriz, padroniza a escala de cinza e prepara o tensor de entrada da rede. Em seguida, o modelo YOLOv8n \cite{jocher2023ultralytics} --- treinado no Google Colab exclusivamente sobre PNG do GRAZPEDWRI-DX --- devolve as coordenadas da fratura. A interface exibe a original à esquerda e a imagem processada à direita, com a caixa delimitadora e o índice de confiança. O reencapsulamento da saída em DICOM, para interoperabilidade com PACS, \textbf{não} foi implementado e permanece como trabalho futuro \cite{dicomstandard2024,nagy2022grazpedwri}.
+O ciclo operacional do software de demonstração inicia-se com o recebimento da radiografia em PNG --- formato no qual os dados identificadores do paciente não estão presentes. Caso o arquivo enviado esteja em DICOM, a conversão para PNG já está implementada na interface: lê-se somente a matriz de \textit{pixels} (\texttt{pixel\_array}) e o cabeçalho não é propagado --- não há lista explícita de \textit{tags} removidas nem OCR de texto gravado na imagem. O módulo de pré-processamento normaliza a matriz, padroniza a escala de cinza e prepara o tensor de entrada da rede. Em seguida, o modelo YOLOv8n \cite{jocher2023ultralytics} --- treinado no Google Colab exclusivamente sobre PNG do GRAZPEDWRI-DX --- devolve as coordenadas da fratura. A interface exibe a original à esquerda e a imagem processada à direita, com a caixa delimitadora e o índice de confiança. O reencapsulamento da saída em DICOM, para interoperabilidade com PACS, \textbf{não} foi implementado e permanece como trabalho futuro \cite{dicomstandard2024,nagy2022grazpedwri}.
 
 \subsection{Diferença para Abordagens Existentes}
 \label{subsec:diferenca_abordagens}
-A literatura acadêmica contemporânea possui diversos modelos baseados em classificação binária, sistemas que apenas informam ao final do processo se uma radiografia ``possui fratura'' ou ``é normal''. A principal distinção desta pesquisa é o foco arquitetural na detecção e localização explícita por meio de algoritmos de detecção de objetos de estágio único (\textit{single-stage detectors}). O sistema não fornece apenas um veredito opaco, mas oferece explicabilidade visual e espacial por meio das coordenadas exatas da lesão, o que aumenta a confiança do corpo clínico na ferramenta.
+A literatura acadêmica contemporânea possui diversos modelos baseados em classificação binária, sistemas que apenas informam ao final do processo se uma radiografia ``possui fratura'' ou ``é normal''. A principal distinção desta pesquisa é o foco arquitetural na detecção e localização explícita por meio de algoritmos de detecção de objetos de estágio único (\textit{single-stage detectors}). O sistema não fornece apenas um veredito opaco: devolve a coordenada da lesão por caixa delimitadora, o que localiza o achado na imagem. Isso é localização visual, não um método de Inteligência Artificial Explicável.
 
 \subsection{Hipótese}
 \label{subsec:hipotese}
@@ -459,7 +457,7 @@ A condução dos experimentos de aprendizado profundo exigiu infraestrutura com 
 
 O ambiente de \textit{software} foi construído em Python, com a biblioteca Ultralytics YOLO na implementação YOLOv8n \cite{jocher2023ultralytics} e o GRAZPEDWRI-DX no layout de anotações YOLO \cite{nagy2022grazpedwri,redmon2016you}. Para garantir a reprodutibilidade científica, os hiperparâmetros foram controlados e documentados em arquivos YAML (taxa de aprendizado, tamanho do lote, número de épocas e limiares de confiança).
 
-O processo de otimização dos pesos empregou o otimizador AdamW. A função de custo (\textit{Loss Function}) do detector penaliza erros de classificação, de localização e de dimensionamento da caixa delimitadora. O treinamento foi executado em lotes (\textit{batches}) adequados à memória VRAM disponível. O número de épocas foi regulado com \textit{Early Stopping}, prevenindo sobreajuste \cite{litjens2017survey}.
+O processo de otimização dos pesos empregou o otimizador AdamW. A função de custo (\textit{Loss Function}) do detector penaliza erros de classificação, de localização e de dimensionamento da caixa delimitadora. O treinamento foi executado em lotes (\textit{batches}) adequados à memória VRAM disponível. Os arquivos YAML da fase oficial registram 100 épocas e \textit{patience} 20 (\textit{early stopping} na validação). Na fase exploratória, o mesmo perfil foi executado com 30 épocas sobre o subset (\texttt{python -m src.run\_mini\_train --epochs 30}), de modo que \textit{baseline} e proposta ali compartilharam o mesmo orçamento de treino. Os Códigos~\ref{cod:baseline_yaml} e~\ref{cod:proposed_yaml} mostram a configuração oficial; a sobreposição de 30 épocas no subset não altera esses YAML \cite{litjens2017survey}.
 
 O particionamento \textbf{não} foi aleatório por imagem: utilizou-se divisão por identificador de paciente, com proporção aproximada de 80\%/10\%/10\% para treino, validação e teste. Assim, todas as radiografias de um mesmo paciente permanecem em um único split, evitando vazamento de identidade anatômica entre treino e teste --- problema clássico em bases hospitalares com múltiplas projeções por indivíduo \cite{nagy2022grazpedwri,litjens2017survey}. Na fase oficial, o treino reuniu cerca de 16\,211 imagens e o teste, 2\,026 imagens; a validação intermediária guiou o \textit{early stopping}. Na fase exploratória, o mesmo critério por paciente foi aplicado a um subset de 1\,600 imagens de treino.
 
@@ -472,7 +470,7 @@ O pré-processamento radiológico converte as PNG de 16 bits para matrizes de 8 
 
 Dois perfis experimentais foram configurados: (i) \textit{baseline} --- treino \textit{from scratch} sem \textit{data augmentation}; (ii) \textit{proposta} --- 8-bit + CLAHE, \textit{transfer learning} e augmentação. Todas as imagens de treino, validação e teste permaneceram em PNG, justamente para que o modelo não consumisse arquivos DICOM com dados de paciente. Para a demonstração ao usuário final, implementou-se um software (protótipo em Streamlit, \texttt{codigo/app/streamlit\_app.py}) que recebe PNG ou converte DICOM para PNG sem o cabeçalho identificador, aplica o pré-processamento, executa a inferência e exibe a original à esquerda e a detecção à direita. A escrita da saída novamente em DICOM não faz parte do protótipo testado e fica como trabalho futuro. Os procedimentos de instalação e de uso constam nos Apêndices A e B.
 
-Os Códigos~\ref{cod:preprocess},~\ref{cod:baseline_yaml},~\ref{cod:proposed_yaml},~\ref{cod:treino} e~\ref{cod:avaliacao} apresentam trechos essenciais do \textit{pipeline}. Os arquivos completos permanecem no diretório \texttt{codigo/}.
+Os Códigos~\ref{cod:preprocess},~\ref{cod:baseline_yaml},~\ref{cod:proposed_yaml},~\ref{cod:treino} e~\ref{cod:avaliacao} apresentam trechos essenciais do \textit{pipeline}. Os Códigos~\ref{cod:baseline_yaml} e~\ref{cod:proposed_yaml} reproduzem os YAML da \textbf{fase oficial} (100 épocas). Na fase exploratória, o comando \texttt{python -m src.run\_mini\_train --epochs 30} sobrepôs esse valor para \textit{baseline} e proposta no subset. Os arquivos completos permanecem no diretório \texttt{codigo/}.
 
 \begin{codigo}[htb]
 \caption{PRÉ-PROCESSAMENTO COM NORMALIZAÇÃO E CLAHE}
@@ -482,14 +480,14 @@ Os Códigos~\ref{cod:preprocess},~\ref{cod:baseline_yaml},~\ref{cod:proposed_yam
 \end{codigo}
 
 \begin{codigo}[htb]
-\caption{CONFIGURAÇÃO DO EXPERIMENTO BASELINE}
+\caption{CONFIGURAÇÃO DO EXPERIMENTO BASELINE (FASE OFICIAL; SUBSET: 30 ÉPOCAS)}
 \label{cod:baseline_yaml}
 \lstinputlisting[language=Python]{codigos/baseline.yaml}
 \fonte{Elaborado pelo autor, 2026}
 \end{codigo}
 
 \begin{codigo}[htb]
-\caption{CONFIGURAÇÃO DO EXPERIMENTO PROPOSTA}
+\caption{CONFIGURAÇÃO DO EXPERIMENTO PROPOSTA (FASE OFICIAL; SUBSET: 30 ÉPOCAS)}
 \label{cod:proposed_yaml}
 \lstinputlisting[language=Python]{codigos/proposed.yaml}
 \fonte{Elaborado pelo autor, 2026}
@@ -520,7 +518,7 @@ Matematicamente, a tarefa consiste em projetar uma função $f(x)$ parametrizada
 \hat{y} = [p_c, b_x, b_y, b_w, b_h]
 \end{equation}
 
-Nesta formulação, $p_c$ representa o índice probabilístico (confiança) de que a anomalia identificada seja, de fato, uma fratura. As variáveis contínuas $b_x$ e $b_y$ representam as coordenadas espaciais do centro geométrico da caixa delimitadora em relação aos eixos da imagem, enquanto $b_w$ e $b_h$ definem, respectivamente, a largura e a altura da área afetada. A rede neural aprende a mapear o espaço visual da radiografia diretamente para este vetor numérico, permitindo que o sistema informe ao profissional de saúde a localização exata e a extensão anatômica do trauma \cite{redmon2016you,lin2014coco}.
+Nesta formulação, $p_c$ representa o índice probabilístico (confiança) de que a anomalia identificada seja, de fato, uma fratura. As variáveis contínuas $b_x$ e $b_y$ representam as coordenadas espaciais do centro geométrico da caixa delimitadora em relação aos eixos da imagem, enquanto $b_w$ e $b_h$ definem, respectivamente, a largura e a altura da área afetada. A rede neural aprende a mapear o espaço visual da radiografia diretamente para este vetor numérico, permitindo que o sistema informe ao profissional de saúde a localização aproximada da lesão por caixa delimitadora --- não a extensão anatômica precisa do traço da fratura \cite{redmon2016you,lin2014coco}.
 
 \begin{figure}[htb]
     \centering
@@ -551,12 +549,14 @@ Para avaliar especificamente a qualidade da localização visual gerada pela red
 IoU = \frac{\text{Área}(\hat{B} \cap B)}{\text{Área}(\hat{B} \cup B)}
 \end{equation}
 
-Neste trabalho, um Verdadeiro Positivo só é contabilizado se a rede não apenas detectar a fratura, mas desenhar a caixa com um $IoU \geq 0.5$ em relação à marcação real. Por fim, o modelo global foi avaliado pela \textit{Mean Average Precision} (mAP), que consolida o desempenho da rede. O mAP calcula a área sob a curva de Precisão-Sensibilidade para diferentes limiares de IoU, fornecendo uma métrica escalar robusta que reflete a capacidade do modelo de operar com alta confiabilidade na identificação de descontinuidades ósseas \cite{lin2014coco,kim2020,litjens2017survey}.
+Neste trabalho, um Verdadeiro Positivo só é contabilizado se a rede não apenas detectar a fratura, mas desenhar a caixa com um $IoU \geq 0.5$ em relação à marcação real. Por fim, o modelo global foi avaliado pela \textit{Mean Average Precision} (mAP), que consolida o desempenho da rede. O mAP calcula a área sob a curva de Precisão-Sensibilidade para diferentes limiares de IoU \cite{lin2014coco,kim2020,litjens2017survey}.
+
+Há dois limiares de confiança distintos, e não devem ser confundidos. O Código~\ref{cod:avaliacao} avalia com $\mathrm{conf}=0{,}001$, padrão da Ultralytics para traçar a curva completa e obter o mAP; as precisões e sensibilidades reportadas nas tabelas correspondem a esse protocolo de avaliação (ponto de operação da curva, não ao slider do software). Já o protótipo Streamlit usa, por padrão, confiança mínima $0{,}25$, ajustável pelo usuário. Portanto, a sensibilidade de 86,37\% \textbf{não} é exatamente a que o médico vê na interface. Calibrar o limiar de operação para triagem permanece como trabalho futuro.
 
 \chapter{Resultados e Discussão}
 \label{cap:resultados}
 
-Este capítulo apresenta os resultados experimentais no GRAZPEDWRI-DX para detecção de fraturas de punho. A condução seguiu duas etapas complementares: (i)~\textbf{fase exploratória} com subset de 1\,600 imagens de treino, para iterar com rapidez, atingir a meta orientativa de cerca de 70\% e comparar \textit{baseline} versus proposta em condições equiparáveis; (ii)~\textbf{fase oficial} com o dataset completo (cerca de 16\,211 imagens de treino), consolidando o desempenho final da técnica proposta. O limiar de IoU de referência foi 0,5 \cite{nagy2022grazpedwri,lin2014coco}.
+Este capítulo apresenta os resultados experimentais no GRAZPEDWRI-DX para detecção de fraturas de punho. A condução seguiu duas etapas complementares: (i)~\textbf{fase exploratória} com subset de 1\,600 imagens de treino e 30 épocas, para iterar com rapidez e comparar \textit{baseline} versus proposta em condições equiparáveis; (ii)~\textbf{fase oficial} com o dataset completo (cerca de 16\,211 imagens de treino, 100 épocas) e avaliação no \textbf{teste} de 2\,026 imagens. A meta orientativa de 70\% em mAP@0,5 foi um critério interno de viabilidade da fase exploratória, definido no projeto --- não um limiar clínico validado. O limiar de IoU de referência foi 0,5 \cite{nagy2022grazpedwri,lin2014coco}. Não houve ablação: a proposta altera simultaneamente profundidade de bits, CLAHE, \textit{transfer learning} e augmentação, de modo que o ganho frente ao \textit{baseline} é do \textbf{pacote}, não de cada técnica isolada. Tampouco há \textit{baseline} no dataset completo; o salto 58\%$\rightarrow$92,9\% mistura efeito da receita com efeito de mais dados e mais épocas. Cada configuração foi treinada uma única vez (semente 42).
 
 \section{Resultados Baseline}
 \label{sec:resultados_baseline}
@@ -573,7 +573,7 @@ Na fase oficial, o modelo foi retreinado/avaliado com o conjunto completo (100 �
 \section{Comparação}
 \label{sec:comparacao}
 
-A Tabela~\ref{tab:metricas_experimentos} apresenta as métricas oficiais da proposta no dataset completo. A Tabela~\ref{tab:comparacao_subset} documenta a comparação exploratória \textit{baseline} versus proposta (N = 1\,600). A Tabela~\ref{tab:comparacao_treinos} sintetiza a evolução: do \textit{baseline} exploratório à proposta no subset e, por fim, à proposta completa.
+A Tabela~\ref{tab:metricas_experimentos} apresenta as métricas oficiais da proposta no \textbf{conjunto de teste} (N = 2\,026), não no treino. A Tabela~\ref{tab:comparacao_subset} documenta a comparação exploratória \textit{baseline} versus proposta (1\,600 imagens de treino, 30 épocas). A Tabela~\ref{tab:comparacao_treinos} sintetiza a evolução: o N da última linha (16\,211) é o tamanho do treino completo; as métricas dessa linha foram medidas no teste de 2\,026 imagens.
 
 \input{resultados/tabela_metricas.tex}
 \input{resultados/tabela_comparacao_subset.tex}
@@ -606,7 +606,7 @@ A Figura~\ref{fig:grafico_subset} confronta \textit{baseline} e proposta no subs
 
 \begin{figure}[H]
     \centering
-    \legendaf{fig:grafico_oficial}{Métricas oficiais da proposta no dataset completo}
+    \legendaf{fig:grafico_oficial}{Métricas oficiais da proposta no conjunto de teste (N = 2.026)}
     \safeincludegraphics[width=0.78\textwidth]{Figuras/grafico_metricas_oficiais.png}
     \fonte{Elaborado pelo autor, 2026}
 \end{figure}
@@ -656,7 +656,7 @@ Além das métricas padrão, a resiliência do algoritmo pode ser investigada su
 \section{Discussão}
 \label{sec:discussao}
 
-Os resultados sustentam a viabilidade de integrar detectores de estágio único ao apoio à decisão em radiografias de punho. A estratégia de duas fases (exploratória em 1\,600 imagens e oficial no dataset completo) permitiu atingir a meta de 70\% com agilidade e, em seguida, consolidar mAP@0,5 de 92,94\% na proposta completa. No subset, o \textit{baseline} permaneceu abaixo de 70\%, reforçando o ganho do \textit{transfer learning} e da augmentação. A velocidade de inferência da YOLO favorece alertas quase em tempo real \cite{redmon2016you,kim2020}.
+Os resultados sustentam a viabilidade de integrar detectores de estágio único ao apoio à decisão em radiografias de punho \textbf{neste dataset}. A estratégia de duas fases permitiu superar a meta interna de 70\% no subset e, em seguida, consolidar mAP@0,5 de 92,94\% no teste completo (N = 2\,026). No subset, com o mesmo orçamento de 30 épocas, o \textit{baseline} permaneceu abaixo de 70\% e a proposta alcançou 84,43\%: esse ganho de cerca de 26 pontos percentuais é do \textbf{pacote} (8-bit, CLAHE, \textit{transfer learning} e augmentação), não de cada técnica isolada --- não houve ablação. O número 92,9\% da fase oficial não deve ser lido como ``o mesmo ganho do subset, só que maior'': ali não existe \textit{baseline} com 16\,211 imagens. Em CPU (YOLOv8n, \texttt{imgsz}=640, $\mathrm{conf}=0{,}25$), 22 radiografias do acervo, após aquecimento, levaram em média 141\,ms de parede por imagem (cerca de 84\,ms só na inferência). Isso descreve o protótipo neste computador, não um tempo de GPU nem o conjunto de teste oficial. A interface Streamlit exibe o tempo da predição corrente. Precisão e sensibilidade em $\mathrm{conf}=0{,}25$ no teste oficial não foram recalculadas neste trabalho; os 92,21\% e 86,37\% permanecem no protocolo $\mathrm{conf}=0{,}001$ \cite{redmon2016you,kim2020}.
 
 O escopo permanece restrito ao punho do GRAZPEDWRI-DX; não se pretende generalizar para corpo inteiro nem substituir a avaliação médica. Limitações incluem fraturas muito iniciais, sobreposição com estruturas densas e a ausência, neste trabalho, de validação clínica prospectiva. Ainda assim, o contraste com o \textit{baseline} e os índices obtidos reforçam o uso como filtro de segurança contra fadiga visual \cite{topol2019,kim2020}.
 
@@ -681,7 +681,7 @@ As Figuras~\ref{fig:demo_caso2},~\ref{fig:demo_caso3} e~\ref{fig:demo_caso4} ilu
 \section{Ética, privacidade e limitações clínicas}
 \label{sec:etica_privacidade}
 
-O uso do GRAZPEDWRI-DX, repositório público e anonimizado em PNG, reduz riscos de identificação direta de pacientes: o formato DICOM transporta metadados pessoais no cabeçalho, ao passo que o PNG utilizado no treino contém apenas a radiografia. Por essa razão, todas as imagens do experimento foram convertidas e processadas em PNG, e o modelo não foi treinado sobre DICOM bruto. Ainda assim, o tema envolve saúde, imagem médica e apoio à decisão clínica, o que exige cautela ética e transparência quanto aos limites do sistema.
+O uso do GRAZPEDWRI-DX, repositório público e de-identificado pelos curadores, reduz riscos de identificação direta pelo \textbf{cabeçalho}: o PNG não carrega as \textit{tags} DICOM. Isso não equivale a afirmar que qualquer PNG está anonimizado --- texto gravado nos \textit{pixels} (\textit{burned-in annotations}) pode permanecer, e o software não faz OCR nem tarja. No protótipo, a conversão DICOM$\rightarrow$PNG lê apenas a matriz de \textit{pixels} (\texttt{pixel\_array}) e não propaga o restante do cabeçalho. Ainda assim, o tema envolve saúde e apoio à decisão, o que exige cautela ética e transparência quanto aos limites do sistema.
 
 Nesta etapa, o trabalho não inclui validação clínica prospectiva em ambiente hospitalar real, tampouco autorização regulatória para uso assistencial. Portanto, a ferramenta não deve ser empregada como diagnóstico autônomo nem substituir o julgamento de profissionais habilitados. Há, ainda, risco de vieses associados ao domínio restrito (radiografias pediátricas de punho), o que limita a extrapolação para outras faixas etárias, regiões anatômicas ou protocolos de aquisição. Qualquer uso futuro em triagem pressupõe supervisão profissional contínua, avaliação institucional e conformidade com normas aplicáveis à saúde digital.
 
@@ -690,7 +690,7 @@ Nesta etapa, o trabalho não inclui validação clínica prospectiva em ambiente
 
 O presente trabalho desenvolveu e avaliou um sistema de suporte à decisão clínica baseado em Redes Neurais Convolucionais para detecção de fraturas de punho em radiografias do repositório GRAZPEDWRI-DX. A motivação partiu do cenário de fadiga visual e alta demanda em urgência, no qual um detector de estágio único pode atuar como camada de segurança concorrente, e não como substituto do profissional.
 
-A metodologia integrou particionamento por paciente, conversão e treino exclusivamente em PNG (sem metadados identificadores do DICOM), pré-processamento 8-bit com CLAHE, \textit{transfer learning} com YOLOv8n \cite{jocher2023ultralytics} e \textit{data augmentation}, com treinamento em GPU no Google Colab. Nos experimentos em subset (1\,600 imagens), a proposta superou 70\% em mAP@0,5 (84,43\%) e sensibilidade (73,77\%), enquanto o \textit{baseline} ficou em 58,02\% e 46,99\%, respectivamente. No treino completo, a proposta atingiu mAP@0,5 de 92,94\%, precisão de 92,21\% e sensibilidade de 86,37\%. Implementou-se ainda um \textit{pipeline} reprodutível e um software de demonstração que recebe PNG, converte DICOM para PNG descartando o cabeçalho quando necessário, e exibe a original à esquerda e a imagem processada (com caixa da fratura) à direita. A gravação da saída em DICOM e a integração a PACS não foram implementadas.
+A metodologia integrou particionamento por paciente, conversão e treino exclusivamente em PNG (sem metadados identificadores do DICOM), pré-processamento 8-bit com CLAHE, \textit{transfer learning} com YOLOv8n inicializado no COCO \cite{jocher2023ultralytics} e \textit{data augmentation}, com treinamento em GPU no Google Colab. Nos experimentos em subset (1\,600 imagens, 30 épocas), a proposta superou 70\% em mAP@0,5 (84,43\%) e sensibilidade (73,77\%), enquanto o \textit{baseline} ficou em 58,02\% e 46,99\%, respectivamente --- ganho do pacote, sem ablação. No teste do dataset completo (2\,026 imagens), a proposta atingiu mAP@0,5 de 92,94\%, precisão de 92,21\% e sensibilidade de 86,37\% (protocolo $\mathrm{conf}=0{,}001$). Implementou-se ainda um \textit{pipeline} reprodutível e um software de demonstração que recebe PNG, converte DICOM para PNG lendo só os \textit{pixels}, e exibe a original à esquerda e a imagem processada (com caixa da fratura) à direita, com limiar padrão 0,25. A gravação da saída em DICOM e a integração a PACS não foram implementadas.
 
 Quanto ao problema de pesquisa --- de que maneira uma CNN pode atuar como camada adicional de segurança na detecção e localização de fraturas, reduzindo falsos negativos em urgência --- os testes respondem apenas no alcance do conjunto público GRAZPEDWRI-DX. As métricas de mAP, precisão e sensibilidade demonstram capacidade do detector de localizar fraturas anotadas nesse repositório, com ganho mensurável sobre o \textit{baseline}. Elas \textbf{não} demonstram, por si, redução de erros de profissionais de saúde em ambiente de urgência real: não houve estudo clínico prospectivo, nem medição de desempenho humano com e sem o sistema. O alcance comprovado é computacional e restrito a radiografias pediátricas de punho da base utilizada.
 
@@ -711,7 +711,7 @@ Requisitos: sistema operacional Windows 10 ou superior; Python 3.10 ou 3.13; pel
 Procedimento de instalação:
 
 \begin{enumerate}
-    \item Copie a pasta do projeto (\texttt{tcc\_\_Copy}) para o computador.
+    \item Copie a pasta do projeto para o computador.
     \item Instale o Python e, no PowerShell, execute:
 \begin{verbatim}
 cd codigo
@@ -720,6 +720,7 @@ python -m venv venv
 pip install torch torchvision --index-url https://download.pytorch.org/whl/cpu
 pip install -r requirements.txt
 \end{verbatim}
+A URL do índice CPU (por extenso, para não ficar cortada no PDF) é \url{https://download.pytorch.org/whl/cpu}. Para GPU NVIDIA, use o índice CUDA em \texttt{codigo/README.md}, por exemplo \url{https://download.pytorch.org/whl/cu124}.
     \item Confirme a instalação:
 \begin{verbatim}
 python -c "import torch; from ultralytics import YOLO; print('OK')"
@@ -745,7 +746,7 @@ O navegador abre em \texttt{http://localhost:8501}. O modelo \texttt{final\_prop
 
 \textbf{Carregar a imagem.} Em ``Envie uma radiografia'', selecione um arquivo PNG, JPG ou DICOM. Radiografias de teste do GRAZPEDWRI-DX estão em \texttt{archive/images\_part1/}. Se o arquivo for DICOM, o programa converte para PNG e \textbf{descarta o cabeçalho} com dados do paciente antes da inferência. O treinamento e a avaliação quantitativa deste trabalho utilizaram apenas PNG.
 
-\textbf{Executar a inferência.} Após o envio, o sistema aplica o pré-processamento (8 bits + CLAHE, se a opção correspondente estiver marcada), executa o YOLOv8n e exibe três painéis: original, imagem pré-processada e detecção com caixa delimitadora. O limiar de confiança mínima pode ser ajustado na barra lateral (valor padrão 0,25).
+\textbf{Executar a inferência.} Após o envio, o sistema aplica o pré-processamento (8 bits + CLAHE, se a opção correspondente estiver marcada), executa o YOLOv8n e exibe três painéis: original, imagem pré-processada e detecção com caixa delimitadora. O limiar de confiança mínima pode ser ajustado na barra lateral (valor padrão 0,25). As métricas das tabelas do Capítulo~5 usam $\mathrm{conf}=0{,}001$ (curva de mAP) e, portanto, não coincidem com o que se vê neste limiar de operação. A interface mostra também o \textbf{tempo de inferência} daquela predição, em milissegundos (métrica ``Tempo de inferência''), medido em volta de \texttt{model.predict}.
 
 \textbf{Interpretar as saídas.} Cada caixa corresponde a uma hipótese de fratura, com confiança entre 0 e 1. A tabela lista as coordenadas em pixels: $x_1,y_1$ (canto superior esquerdo) e $x_2,y_2$ (canto inferior direito). Ausência de caixa acima do limiar não comprova ausência de fratura --- trata-se de um resultado operacional do detector, sujeito a falso negativo. Marcações sobre material metálico podem constituir falso positivo. O sistema \textbf{não} substitui avaliação médica e \textbf{não} grava a saída em DICOM.
 

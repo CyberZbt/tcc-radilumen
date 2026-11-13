@@ -1,4 +1,4 @@
-# Trecho essencial — src/preprocess.py
+# Trecho essencial - src/preprocess.py
 def preprocess_array(img, config=None):
     cfg = config or PreprocessConfig()
     gray = to_uint8(

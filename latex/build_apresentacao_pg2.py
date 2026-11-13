@@ -458,6 +458,33 @@ O que importa na prática: filtro contra o cansaço. Segunda opinião. Nunca soz
 Dificuldades reais: GPU, PNG sem nome, checkpoint, Python que no PC da banca pode não abrir — por isso o site.
 Depois: ruído, limiar, metal. Um dia gravar DICOM de saída e medir com médico no plantão.
 Não prometa hospital implantado. Prometa o que está no ar hoje.""")
+
+    # Limitações — dizer em voz alta
+    s = prs.slides.add_slide(blank)
+    night(s)
+    kicker(s, "Honestidade")
+    title(s, "O que este trabalho não prova")
+    lims = [
+        ("Teste N = 2.026", "O 16.211 é o treino. As métricas oficiais são do teste."),
+        ("Pacote, não ablação", "8-bit + CLAHE + transfer + aug juntos. Sem isolar cada um."),
+        ("Baseline só no subset", "58% → 92,9% mistura técnica com mais dados e 100 épocas."),
+        ("Limiar", "Tabelas: conf 0,001 (mAP). Software: 0,25. Não é o mesmo número."),
+        ("Uma semente", "Sem desvio padrão. Sem dataset externo. Sem Grad-CAM."),
+    ]
+    for i, (h, b) in enumerate(lims):
+        y = 1.45 + i * 0.95
+        txt(s, 0.7, y, 12, 0.32, h, 18, True, CYAN)
+        txt(s, 0.7, y + 0.32, 12, 0.5, b, 16, False, SOFT)
+    fade(s)
+    notes(s, """O QUE FALAR
+Diga isto antes da banca perguntar. É o slide que sobe a nota.
+Um — as métricas oficiais são do teste, 2.026 imagens. Dezesseis mil é o treino. Foi erro de legenda, já corrigido no PDF.
+Dois — não fiz ablação. O ganho de 26 pontos no subset é do pacote inteiro.
+Três — não treinei baseline no dataset completo. Por isso não comparo 58 com 92,9 como se fosse só a técnica.
+Quatro — 86,37% de sensibilidade é no protocolo de mAP, conf 0,001. No software o médico vê 0,25. Não medi o par P/R nesse limiar.
+Cinco — uma rodada, semente 42. Sem GRAZPEDWRI-DX de outros autores no texto: o capítulo de relacionados foi validado em março e não reabri.
+Se perguntarem Ju e Cai 2023: “existem trabalhos no mesmo dataset; não os incluí e não cito números de memória.”""")
+
     s = prs.slides.add_slide(blank)
     fill_photo(s, PUNHO)
     overlay(s, 0, 0, SW, SH, NIGHT, 64000)
